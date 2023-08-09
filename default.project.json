@@ -1,0 +1,42 @@
+{
+  "name": "astraxv2",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Packages": {
+        "$className": "Folder",
+        "stella": {
+          "$path": "src/"
+        }
+      },
+      "__stella": {
+        "$path": "test/__stella.lua"
+      },
+      "client": {
+        "$path": "test/client"
+      },
+      "shared": {
+        "$path": "test/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "server": {
+        "$path": "test/server"
+      },
+      "serverLoader": {
+        "$path": "test/initialize.server.lua"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "clientLoader": {
+          "$path": "test/initialize.client.lua"
+        }
+      }
+    }
+  }
+}

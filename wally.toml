@@ -1,0 +1,18 @@
+[package]
+name = "averyark/stella"
+version = "0.0.1"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+authors = ["averyark"]
+license = "MIT"
+description = "Work in progress Framework."
+
+[dependencies]
+Janitor = "howmanysmall/janitor@^1.14.2"
+Signal = "sleitnick/signal@1.0.1"
+Promise = "lukadev-0/typed-promise@4.0.2"
+t = "osyrisrblx/t@3.0.0"
+iris = "synthranger/iris@2.0.5"
+squash = "data-oriented-house/squash@1.1.5"
+BoatTween = "penguindevs/boattween-fork@1.0.3"
+ProfileService = "brittonfischer/profileservice@2.1.5"

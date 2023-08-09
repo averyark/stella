@@ -1,0 +1,11 @@
+[package]
+name = "penguindevs/boattween-fork"
+description = "A fork of boatbomber's boattween (a module for tweening) to use Sleitnick's signals instead of Instance.new(\"BindableEvent\")."
+version = "1.0.3"
+license = "MIT"
+authors = ["PenguinDevs", "boatbomber <zack@boatbomber.com>"]
+registry = "https://github.com/upliftgames/wally-index"
+realm = "shared"
+
+[dependencies]
+Signal = "sleitnick/signal@1"
