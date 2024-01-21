@@ -53,10 +53,10 @@ network.remote = function(identifier: string): types.event
 			return remote
 		end
 
-		_, remote = Promise.retryWithDelay(function()
+		remote = Promise.retryWithDelay(function()
 			return Promise.new(function(resolve, reject)
-				local remote = main.events[identifier] :: types.event?
-                if remote then
+				local _remote = main.events[identifier] :: types.event?
+                if _remote then
                     return resolve(remote)
                 end
                 return reject()
@@ -75,27 +75,6 @@ end
 network.value = function<Value>(identifier: string, initialValue: Value): types.value
 	return value.new(identifier, initialValue, network.remote(identifier))
 end
-
---[[network.bulkMake = function(bulkMakeTable: {
-	remote: {string}?,
-	values: {string}?,
-	server: {string}?,
-	client: {string}?,
-}): {
-	remote: {types.event}?,
-	values: {types.value}?,
-	server: {types.event}?,
-	client: {types.event}?,
-}
-	local newTable = {}
-	if bulkMakeTable.remote then
-		newTable.remote = {}
-		for _, identifier in pairs(bulkMakeTable.remote) do
-			newTable.remote[identifier] = network.remote(identifier)
-		end
-	end
-	return newTable
-end]]
 
 network.log = main.log
 network.EventEmitType = main.EventEmitType

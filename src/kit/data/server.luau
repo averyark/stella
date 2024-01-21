@@ -75,10 +75,10 @@ local TYPE = function()
 	local settings = require(ReplicatedStorage.__stella)
 
 	public.profile = ProfileService.GetProfileStore():LoadProfileAsync()
-	public.data = settings.DataTemplate
+	public.data = settings.DATA_TEMPLATE
 	public.changed = Signal.new()
 
-	type template = typeof(settings.DataTemplate)
+	type template = typeof(settings.DATA_TEMPLATE)
 
 	function public:apply(f: (template) -> ()) end
 
@@ -114,12 +114,12 @@ server.start = function()
 	end)
 
 	Promise.try(function()
-		local _datastore = ProfileService.GetProfileStore(utility.settings.DataScope, utility.settings.DataTemplate)
+		local _datastore = ProfileService.GetProfileStore(utility.settings.DATA_SCOPE, utility.settings.DATA_TEMPLATE)
 		local isValid = t.table(_datastore)
 
 		assert(isValid, "Datastore failed to load")
 
-		local profile = ProfileService.GetProfileStore(utility.settings.DataScope, utility.settings.DataTemplate)
+		local profile = ProfileService.GetProfileStore(utility.settings.DATA_SCOPE, utility.settings.DATA_TEMPLATE)
 
 		return _datastore
 	end)

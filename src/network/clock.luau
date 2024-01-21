@@ -49,7 +49,7 @@ do
 			local skipped = math.floor(self.dt / self.interval)
 			self.dt -= skipped * self.interval
 
-			if utility.settings.NetworkDebugEnabled and utility.settings.DebugEnabled then
+			if utility.settings.NETWORK_DEBUG_ENABLED and utility.settings.DEBUG_ENABLED then
 				utility.warn("clock > Clock is falling behind! Skipped " .. skipped .. " intervals")
 			end
 

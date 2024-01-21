@@ -148,13 +148,13 @@ module.start = function()
 	end
 
 
-	if utility.settings.DebugEnabled then
+	if utility.settings.DEBUG_ENABLED then
 		module.info.bench = bench
 		module.info.attempts = attempts
 		module.info.errored = errored
 	end
 
-	if utility.settings.ModuleLoadAnalysisReport then
+	if utility.settings.MODULE_LOAD_ANALYSIS_REPORT then
 		local benchPreloadString = ""
 		for _, preloadBench in pairs(bench.preload) do
 			benchPreloadString =

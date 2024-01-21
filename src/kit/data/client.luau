@@ -44,7 +44,9 @@ local remotes = {
 local client = {}
 local data
 
-local connectedFunctions = {}
+type signal = typeof(Signal.new())
+
+local connectedSignals = {} :: { signal }
 
 local changed = function(changes)
 	local snapchot = deepCopy(data)
@@ -54,12 +56,9 @@ local changed = function(changes)
 		fromPath(data, pathUpper1)[change.key] = change.new
 	end
 
-	for pathTable, connectedFunction in pairs(connectedFunctions) do
+	for pathTable, connectedSignal in pairs(connectedSignals) do
 		if absoluteMatch(pathTable, changes) then
-			Promise.try(connectedFunction, {
-				new = fromPath(data, pathTable),
-				old = fromPath(snapchot, pathTable),
-			})
+			connectedSignal:Fire(fromPath(snapchot, pathTable), fromPath(data, pathTable))
 		end
 	end
 end
@@ -71,10 +70,8 @@ local initialize = function(_data)
 
 	data = _data
 
-	for pathTable, connectedFunction in pairs(connectedFunctions) do
-		Promise.try(connectedFunction, {
-			new = fromPath(data, pathTable),
-		})
+	for pathTable, connectedSignal in pairs(connectedSignals) do
+		connectedSignal:Fire(nil, fromPath(data, pathTable))
 	end
 
 	remotes.dataChanged:on(changed)
@@ -104,14 +101,14 @@ client.start = function()
 	remotes.datastoreOnline:on(retrieveDataFromServer)
 end
 
-client.connect = function(_, path: { string }, f: (changes: { new: any, old: any }) -> ())
-	connectedFunctions[path] = f
+client.connect = function(_, path: { string }, callback: (new: any, old: any) -> ())
+	connectedSignals[path] = Signal.new()
 
 	if data then
-		Promise.try(f, {
-			new = fromPath(data, path),
-		})
+		Promise.try(callback, nil, fromPath(data, path))
 	end
+	
+	return connectedSignals[path]:Connect(callback)
 end
 
 client.wait = function()
@@ -121,7 +118,7 @@ client.wait = function()
 end
 
 client.get = function()
-	return data :: typeof(settings.DataTemplate)
+	return data :: typeof(settings.DATA_TEMPLATE)
 end
 
 return client

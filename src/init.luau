@@ -5,10 +5,9 @@ local root = script
 local dependencies = root.dependencies
 local kit = root.kit
 
-local __stella = require(ReplicatedStorage.__stella)
-local data = require(script.kit.data)
-local value = require(script.network.value)
-local utility = require(root.utility)
+
+local __stella = require(ReplicatedStorage["STELLA.CONFIG"])
+
 local Signal = require(dependencies.Signal)
 local Janitor = require(dependencies.Janitor)
 local Promise = require(dependencies.Promise)
@@ -17,11 +16,15 @@ local iris = require(dependencies.iris)
 local BoatTween = require(dependencies.BoatTween)
 local squash = require(dependencies.squash)
 
+local value = require(script.network.value)
+local utility = require(root.utility)
+local uiAutoScale = RunService:IsClient() and require(kit.uiAutoScale)
 local number = require(kit.number)
 local tween = require(kit.tween)
 local module = require(kit.module)
-local controls = require(kit.controls)
-
+local array = require(kit.array)
+local actions = require(kit.actions)
+local data = require(kit.data)
 local network = require(root.network)
 
 local stella = {}
@@ -115,7 +118,7 @@ local function start()
                 task.wait()
             until ReplicatedStorage.__stella:FindFirstChild("coreModulesLoaded")
 
-			if utility.settings.DebugEnabled then
+			if utility.settings.DEBUG_ENABLED then
 				utility.settings.ControlActions.__stellaAction_DebugPanel = -1
 				table.insert(utility.settings.ControlMap.pc, {
 					kind = "MultiKeycode",
@@ -127,8 +130,9 @@ local function start()
 
 			network.start()
 			data.start()
-			controls.start()
+			actions.start()
 			module.start()
+			uiAutoScale.start()
 
 			local windowSizeState = iris.State(Vector2.new(500, 300))
 			local isOpenedState = iris.State(false)
@@ -137,7 +141,7 @@ local function start()
 
 			local serverBench = {} :: typeof(module.info)
 
-			if utility.settings.DebugEnabled then
+			if utility.settings.DEBUG_ENABLED then
 
 				iris.Init()
 
@@ -283,7 +287,7 @@ local function start()
 						iris.Button({"Observe Packets"})
 						iris.End()
 						iris.CollapsingHeader({"Controls analysis"})
-						iris.Text({`Focus: {controls.focusing}`})
+						--iris.Text({`Focus: {controls.focusing}`})
 						iris.End()
 					iris.End()
 				end)
@@ -296,10 +300,10 @@ local function start()
 					serverBench = new
 				end)
 
-				controls.onAction(utility.settings.ControlActions.__stellaAction_DebugPanel):Connect(function()		
+				--[[actiocontrols.onAction(utility.settings.ControlActions.__stellaAction_DebugPanel):Connect(function()		
 					isOpened = not isOpened
 					isOpenedState:set(isOpened)
-				end)
+				end)]]
 			end
 		else
 			network.start()
@@ -328,13 +332,22 @@ local function start()
 	return stellaStartupPromise
 end
 
+
+type DATA_TEMPLATE = typeof(__stella.DATA_TEMPLATE)
+type connection = typeof(Signal.new():Connect(function() end))
+
+stella.iris = iris
 stella.module = module
 stella.number = number
 stella.tween = tween
-stella.data = data
-stella.controls = controls
-stella.actions = utility.settings.ControlActions :: typeof(__stella.ControlActions)
-stella.controlsMap = utility.settings.ControlsMap :: typeof(__stella.ControlMap)
+stella.data = data :: typeof(data) & { 
+	get: () -> (DATA_TEMPLATE),
+	connect: (any, path: { string }, f: (changes: { new: any, old: any }) -> ()) -> (connection),
+	wait: () -> ()
+}
+stella.actions = actions
+stella.array = array
+stella.uiAutoScale = uiAutoScale
 
 stella.start = start
 stella.network = network

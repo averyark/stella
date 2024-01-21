@@ -1,7 +1,7 @@
 -- Edited from BridgeNet2
 local freeThread: thread? -- Thread reusage
 
-local function passer(fn: (...unknown) -> (), ...): ()
+local function passer(fn: (...any) -> (), ...): ()
 	local acquiredThread = freeThread
 	freeThread = nil
 	fn(...)

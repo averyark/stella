@@ -170,6 +170,7 @@ export type Iris = {
 
 	End: () -> (),
 	Text: (args: WidgetArguments) -> Widget,
+	TextRich: (args: WidgetArguments) -> Widget,
 	TextColored: (args: WidgetArguments) -> Widget,
 	TextWrapped: (args: WidgetArguments) -> Widget,
 

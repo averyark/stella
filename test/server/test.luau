@@ -15,7 +15,7 @@ local data = stella.data
 local number = stella.number
 local tween = stella.tween
 local network = stella.network
-local controls = stella.controls
+local actions = stella.actions
 
 local events = require(ReplicatedStorage.shared.events)
 

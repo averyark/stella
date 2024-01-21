@@ -821,6 +821,10 @@ Iris.Text = function(args: Types.WidgetArguments): Types.Widget
 	return Iris._Insert("Text", args)
 end
 
+Iris.TextRich = function(args: Types.WidgetArguments): Types.Widget
+	return Iris._Insert("TextRich", args)
+end
+
 --- @prop TextColored Widget
 --- @within Widgets
 --- A simple Textbox, which has colored text.

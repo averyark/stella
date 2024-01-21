@@ -101,7 +101,7 @@ end
 local function removeFromQueue(queue: { [number]: types.packet }, packet: types.packet, message: string?)
 	local index = table.find(queue, packet)
 	if index then
-		if utility.settings.DebugEnabled and utility.settings.NetworkDebugEnabled then
+		if utility.settings.DEBUG_ENABLED and utility.settings.NETWORK_DEBUG_ENABLED then
 			utility.print("network: removed from queue: " .. (message or "not provied") .. debug.traceback("\n\n", 2))
 		end
 		table.remove(queue, index)
@@ -318,9 +318,9 @@ local function start()
 					utility.warn(`network > {player.Name} is already connected`)
 					return
 				end
-				if utility.settings.LimitNetworkingRate then
+				if utility.settings.NETWORK_LIMIT_RATE then
 					playerLimiters[player] =
-						limiter.new(utility.settings.PlayerNetworkingRPS, utility.settings.PlayerNetworkingRPM)
+						limiter.new(utility.settings.NETWORK_RPS, utility.settings.NETWORK_RPM)
 				else
 					playerLimiters[player] = limiter.new(-1, -1) -- no limit
 				end
@@ -493,7 +493,7 @@ local function start()
 					removeFromQueue(outgoingQueue, packet, "Packet is processed")
 				end
 				if #packets > 0 then
-					if utility.settings.DebugEnabled and utility.settings.NetworkDebugEnabled then
+					if utility.settings.DEBUG_ENABLED and utility.settings.NETWORK_DEBUG_ENABLED then
 						table.insert(network.log, { now = DateTime.now(), packets = packets })
 					end
 					channel:FireServer(packets)

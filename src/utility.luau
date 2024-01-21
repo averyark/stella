@@ -48,30 +48,19 @@ local function isKind(a: { kind: string, [any]: any }, b: string)
 end
 
 local stellaSettingsFallback = {
-	DataScope = "StellaData",
+	DEBUG_ENABLED = true,
+	MODULE_LOAD_ANALYSIS_REPORT = true,
+	TEST_MODE = false,
+	ADMINISTRATOR = {},
 
-	PlayerNetworkingRPS = 90,
-	PlayerNetworkingRPM = -1,
+	NETWORK_RPS = 60,
+	NETWORK_RPM = -1,
+	NETWORK_DEBUG_ENABLED = true,
+	NETWORK_LIMIT_RATE = true,
 
-	UIDevelopmentResolution = Vector2.new(1280, 720),
-
-	DebugEnabled = true, -- Master Control
-	NetworkDebugEnabled = true,
-	ModuleLoadAnalysisReport = true,
-	TestMode = false,
-	LimitNetworkingRate = true,
-
-	Whitelisted = {},
-	DataTemplate = {},
-	ControlActions = {},
-	ControlMap = {
-		["pc"] = {},
-		["xbox"] = {},
-		["mobile"] = {},
-	},
-	ControlsDefaultFocus = "movement",
-
-	DatastoreFailureFallback = function(err)
+	DATA_SCOPE = "StellaData",
+	DATA_TEMPLATE = {},
+	DATA_FAIL_FALLBACK_RESOLVER = function(err)
 		for _, player in pairs(Players:GetPlayers()) do
 			-- Inform the player
 		end
@@ -80,15 +69,33 @@ local stellaSettingsFallback = {
 			player:Kick(`A fatal datastore incident occurred, please report to the developers: {err}`)
 		end)
 	end,
+
+	ACTIONS = {},
+
+	UI_SCALE_MODES = {
+		[1] = 0.5, -- Mini: 480p
+		[2] = 1, -- Small: 720p (Recommended UI development mode, Develop UIs in 1280x720 Emulation)
+		[3] = 1.5, -- Medium: 1080p
+		[4] = 2, -- Large: 2k
+		[5] = 3, -- Mega: 4k
+	},
+	UI_SCALE_THRESHOLD = {
+		[1] = Vector2.new(0, 0), -- At least have a positive screen resolution..
+		[2] = Vector2.new(1080, 620),
+		[3] = Vector2.new(1720, 980),
+		[4] = Vector2.new(2360, 1340),
+		[5] = Vector2.new(3640, 2060),
+	},
+	UI_SCALE_TAG = "AutoScale"
 }
 
 export type settings = (typeof(stellaSettingsFallback) & {
-	Whitelisted: {
+	ADMINISTRATOR: {
 		{ Type: "UserId", Id: number }
 		| { Type: "Group", Id: number, Rank: number? }
 		| { Type: "All", State: boolean }
 	},
-	DataTemplate: { [any]: any },
+	DATA_TEMPLATE: { [any]: any },
 })?
 
 utility.settings = nil :: settings

@@ -10,8 +10,8 @@
           "$path": "src/"
         }
       },
-      "__stella": {
-        "$path": "test/__stella.lua"
+      "STELLA.CONFIG": {
+        "$path": "test/STELLA.CONFIG"
       },
       "client": {
         "$path": "test/client"

@@ -15,7 +15,6 @@ local Janitor = require(dependencies.Janitor)
 local Promise = require(dependencies.Promise)
 local t = require(dependencies.t)
 local iris = require(dependencies.iris)
-local BoatTween = require(dependencies.BoatTween)
 local squash = require(dependencies.squash)
 
 local limiters = {}

@@ -76,6 +76,19 @@ return function(Iris, widgets)
 	)
 
 	Iris.WidgetConstructor(
+		"TextRich",
+		widgets.extend(abstractText, {
+			Generate = function(thisWidget)
+				local Text = abstractText.Generate(thisWidget)
+				Text.Name = "Iris_Text"
+				Text.RichText = true
+				Text.TextWrapped = true
+
+				return Text
+			end,
+		})
+	)
+	Iris.WidgetConstructor(
 		"TextWrapped",
 		widgets.extend(abstractText, {
 			Generate = function(thisWidget)
