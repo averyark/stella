@@ -122,7 +122,7 @@ local function GetScaleFromResolution(
     local index = 1
 
     for i, resolutionRequirement in utility.settings.UI_SCALE_THRESHOLD do
-        if resolution.X < resolutionRequirement or resolution.Y < resolutionRequirement then
+        if resolution.X < resolutionRequirement.X or resolution.Y < resolutionRequirement.Y then
             break
         end
         index = i

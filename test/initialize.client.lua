@@ -13,23 +13,5 @@ local network = stella.network
 
 stella.module.setModuleFolder(ReplicatedStorage.client)
 stella.start():andThen(function() 
-    local events = require(ReplicatedStorage.shared.events)
-
-    events.client.bindableTest:on(function(...)
-        --print(...)
-    end)
-    
-    events.client.bindableTest:emit("yeah")
-    events.client.bindableTest:emit(1, 2)
-    
-    events.remote.remoteTest:on(function(...)
-        --print(...)
-    end)
-    
-    events.remote.remoteTest:call(4, 5, 6):andThen(function(a, b)
-        --print(a, b)
-    end)
-    
-    task.wait(8)
-    events.remote.remoteTest:emit(1, "2", 3, 4, 6, true)
+    print("Stella load completed")
 end)

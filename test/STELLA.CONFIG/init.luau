@@ -1,7 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local ACTIONS = require(script.ACTIONS)
 local DATA_TEMPLATE = require(script.DATA_TEMPLATE)
 
 local actions = {
@@ -14,12 +13,12 @@ return {
 	MODULE_LOAD_ANALYSIS_REPORT = true,
 	TEST_MODE = false,
 	ADMINISTRATOR = {
-        { Type = "UserId", Id = 540209459 }
+        { Kind = "UserId", Id = 540209459 }
     },
 
 	NETWORK_RPS = 60,
 	NETWORK_RPM = -1,
-	NETWORK_DEBUG_ENABLED = true,
+	NETWORK_DEBUG_ENABLED = false,
 	NETWORK_LIMIT_RATE = true,
 
 	DATA_SCOPE = "StellaData",
@@ -33,8 +32,6 @@ return {
 			player:Kick(`A fatal datastore incident occurred, please report to the developers: {err}`)
 		end)
 	end,
-
-	ACTIONS = ACTIONS,
 
 	UI_SCALE_MODES = {
 		[1] = 0.5, -- Mini: 480p

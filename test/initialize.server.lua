@@ -13,24 +13,5 @@ local network = stella.network
 
 stella.module.setModuleFolder(ServerScriptService.server)
 stella.start():andThen(function() 
-    local events = require(ReplicatedStorage.shared.events)
-
-    events.server.bindableTest:on(function(...)
-        --print(...)
-    end)
-    events.server.bindableTest:emit("yeah")
-    events.server.bindableTest:emit(1, 2)
-    
-    events.remote.remoteTest:on(function(...)
-        --print(...)
-        print(...)
-    end)
-    
-    events.remote.remoteTest:onCall(function(player: Player, a, b, c) 
-        --print(player, a, b, c)
-        return a + b + c, "yes"
-    end)
-    
-    task.wait(7)
-    events.remote.remoteTest:emit(network.EventEmitType.AllPlayers(), 1, "2", 3, 4, 6, true, false, Vector3.new())    
+  
 end)

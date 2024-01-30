@@ -17,19 +17,14 @@ local tween = stella.tween
 local network = stella.network
 local controls = stella.actions
 
-local events = require(ReplicatedStorage.shared.events)
-
 local test = {}
 
 function test.load()
-    events.remote.remoteTest:emit("test")
-    --error("Something went wrong")
+
 end
 
 function test.preload()
-    controls.onAction(stella.actions.TestAction):Connect(function(inputObject: InputObject)
-        print(inputObject.UserInputState)
-    end)
+    
 end
 
 return module.new("test", test)

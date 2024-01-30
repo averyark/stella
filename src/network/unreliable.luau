@@ -10,7 +10,7 @@ local RunService = game:GetService("RunService")
 local root = script.Parent.Parent
 local dependencies = root.dependencies
 
-local utility = require(script.Parent.Parent.utility)
+local utility = require(root.utility)
 local Signal = require(dependencies.Signal)
 local Janitor = require(dependencies.Janitor)
 local Promise = require(dependencies.Promise)
@@ -29,36 +29,36 @@ local class = {}
 
 local standing = {Local = {}, Remote = {}, ReplicatedRemote = {}}
 
-local event = {}
+local unreliable = {}
 
 local function stand(identifier: string, kind: types.EventType)
 	if standing[kind][identifier] then
 		return standing[kind][identifier]
 	end
 
-	standing[kind][identifier] = setmetatable({}, event)
+	standing[kind][identifier] = setmetatable({}, unreliable)
 
 	return standing[kind][identifier] 
 end
 
 do
-	event.__index = event
+	unreliable.__index = unreliable
 
 	local isServer = RunService:IsServer()
 
-	function event.new(identifier: string, kind: "Local" | "Remote" | "ReplicatedRemote")
+	function unreliable.new(identifier: string, kind: "Remote" | "ReplicatedRemote")
 		utility.assert(not main.events[identifier], "network: identifier already used, shadowing is not allowed")
 		utility.assert(
 			kind == "Remote" and isServer or kind ~= "Remote",
 			"network: cannot create remote from the client"
 		)
 
-		local self = standing[kind][identifier] :: typeof(setmetatable({}, event)) or setmetatable({}, event)
+		local self = standing[kind][identifier] :: typeof(setmetatable({}, unreliable)) or setmetatable({}, unreliable)
 
 		self.identifier = identifier
 		self.signal = Signal.new()
 		self.limiter = limiter.new(-1, -1)
-		self.kind = kind or "Local"
+		self.kind = kind or "Remote"
 		self.callhandler = nil :: (<Parameter, Return>(...Parameter) -> ...Return)?
 		self.maid = Janitor.new()
 
@@ -69,27 +69,25 @@ do
 		return self
 	end
 
-	function event.limit(self: event, rps: number, rpm: number)
+	function unreliable.limit(self: unreliable, rps: number, rpm: number)
 		self.limiter.maxRPS = rps
 		self.limiter.maxRPM = rpm
 	end
 
-	function event.Destroy(self: event)
+	function unreliable.Destroy(self: unreliable)
 		
 		self.maid:Destroy()
 
 		main.removeEvent(self)
 	end
 
-	function event.on<Argument>(self: event, callback: (...Argument) -> ())
+	function unreliable.on<Argument>(self: unreliable, callback: (...Argument) -> ())
 		
 		return self.signal:Connect(callback:: () -> ())
 	end
 
-	function event.emit(self: event, ...: any?)
-		if self.kind == "Local" then
-			self.signal:Fire(...)
-		elseif self.kind == "Remote" or self.kind == "ReplicatedRemote" then
+	function unreliable.emit(self: unreliable, ...: any?)
+		if self.kind == "Remote" or self.kind == "ReplicatedRemote" then
 			local parameters = { ... }
 			local param1 = parameters[1]
 			local eventEmitType = if t.table(param1) and param1.kind then param1 else nil
@@ -114,52 +112,8 @@ do
 		end
 	end
 
-	function event.emitAll(self: event, ...:any)
-		local packet = {}
-
-		packet.eventEmitType = EventEmitType.AllPlayers()
-		packet.params = { ... }
-		packet.identifier = self.identifier
-
-		main.addOutgoingQueue(self, packet)
-	end
-
-	function event.call(self: event, ...: any?)
-		if self.kind == "Local" then
-			return Promise.new(function(resolve)
-				resolve({ self.callhandler() })
-			end)
-		elseif self.kind == "Remote" or self.kind == "ReplicatedRemote" then
-			--utility.assert(not isServer, "network: For security reasons, you cannot call a client")
-			if isServer then
-				return Promise.reject("network: For security reasons, you cannot call a client")
-			end
-			local parameters = { ... }
-			local packet = {}
-
-			packet.params = parameters
-			packet.identifier = self.identifier
-			packet.callId = main.calls
-			packet.callStatus = "QueuedOutgoing"
-
-			main.calls += 1
-
-			main.addOutgoingCallQueue(self, packet)
-
-			return Promise.new(function(resolve, reject)
-				packet.callResolve = resolve
-				packet.callReject = reject
-			end)
-		end
-		return Promise.reject("network: Invalid remote kind for call")
-	end
-
-	function event.onCall<Parameter, Return>(self: event, callback: (...Parameter) -> ...Return)
-		self.callHandler = callback
-	end
-
-	type event = typeof(event.new("", "Local"))
-	class.new = event.new
+	type unreliable = typeof(unreliable.new("", "Remote"))
+	class.new = unreliable.new
 end
 
 class.stand = stand

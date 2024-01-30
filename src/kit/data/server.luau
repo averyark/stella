@@ -72,7 +72,7 @@ end
 local TYPE = function()
 	local public = {}
 
-	local settings = require(ReplicatedStorage.__stella)
+	local settings = utility.settings.DATA_TEMPLATE
 
 	public.profile = ProfileService.GetProfileStore():LoadProfileAsync()
 	public.data = settings.DATA_TEMPLATE

@@ -51,11 +51,15 @@ local stellaSettingsFallback = {
 	DEBUG_ENABLED = true,
 	MODULE_LOAD_ANALYSIS_REPORT = true,
 	TEST_MODE = false,
-	ADMINISTRATOR = {},
+	ADMINISTRATOR = {} :: {
+		{ Kind: "UserId", Id: number }
+		| { Kind: "Group", Id: number, Rank: number? }
+		| { Kind: "All", State: boolean }
+	},
 
 	NETWORK_RPS = 60,
 	NETWORK_RPM = -1,
-	NETWORK_DEBUG_ENABLED = true,
+	NETWORK_DEBUG_ENABLED = false,
 	NETWORK_LIMIT_RATE = true,
 
 	DATA_SCOPE = "StellaData",
@@ -69,8 +73,6 @@ local stellaSettingsFallback = {
 			player:Kick(`A fatal datastore incident occurred, please report to the developers: {err}`)
 		end)
 	end,
-
-	ACTIONS = {},
 
 	UI_SCALE_MODES = {
 		[1] = 0.5, -- Mini: 480p
@@ -90,23 +92,17 @@ local stellaSettingsFallback = {
 }
 
 export type settings = (typeof(stellaSettingsFallback) & {
-	ADMINISTRATOR: {
-		{ Type: "UserId", Id: number }
-		| { Type: "Group", Id: number, Rank: number? }
-		| { Type: "All", State: boolean }
-	},
+	--[[ADMINISTRATOR: {
+		{ Kind: "UserId", Id: number }
+		| { Kind: "Group", Id: number, Rank: number? }
+		| { Kind: "All", State: boolean }
+	},]]
 	DATA_TEMPLATE: { [any]: any },
 })?
 
 utility.settings = nil :: settings
 
-do
-	if ReplicatedStorage:FindFirstChild("__stella") then
-		utility.settings = require(ReplicatedStorage:FindFirstChild("__stella") :: ModuleScript)
-	else
-		makeStellaWarn("critical error > The \"__stella\" modulescript is required for the stella framework to run")
-	end
-end
+utility.settings = require(ReplicatedStorage["STELLA.CONFIG"])
 
 utility.print = makeStellaPrint
 utility.warn = makeStellaWarn

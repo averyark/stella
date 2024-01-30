@@ -16,13 +16,14 @@ local number = stella.number
 local tween = stella.tween
 local network = stella.network
 local actions = stella.actions
-
-local events = require(ReplicatedStorage.shared.events)
+local array = stella.array
+local uiAutoScale = stella.uiAutoScale
+local debugger = stella.debugger
 
 local test = {}
 
 function test.load()
-    --error("Something went wrong on the server")
+   
 end
 
 function test.preload()

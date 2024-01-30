@@ -22,7 +22,6 @@ local Janitor = require(dependencies.Janitor)
 local t = require(dependencies.t)
 local utility = require(root.utility)
 local helper = require(script.Parent.helper)
-local settings = require(ReplicatedStorage.__stella)
 
 local absoluteMatch = helper.absoluteMatch
 local match = helper.match
@@ -118,7 +117,7 @@ client.wait = function()
 end
 
 client.get = function()
-	return data :: typeof(settings.DATA_TEMPLATE)
+	return data :: typeof(utility.settings.DATA_TEMPLATE)
 end
 
 return client
