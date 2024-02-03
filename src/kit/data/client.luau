@@ -106,7 +106,7 @@ client.connect = function(_, path: { string }, callback: (new: any, old: any) ->
 	if data then
 		Promise.try(callback, nil, fromPath(data, path))
 	end
-	
+
 	return connectedSignals[path]:Connect(callback)
 end
 

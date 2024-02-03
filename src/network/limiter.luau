@@ -9,7 +9,7 @@ local RunService = game:GetService("RunService")
 local root = script.Parent.Parent
 local dependencies = root.dependencies
 
-local clock = require(script.Parent.clock)
+local clock = require(root.kit.clock)
 local Signal = require(dependencies.Signal)
 local Janitor = require(dependencies.Janitor)
 local Promise = require(dependencies.Promise)

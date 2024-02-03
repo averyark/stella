@@ -10,8 +10,8 @@
           "$path": "src/"
         }
       },
-      "STELLA.CONFIG": {
-        "$path": "test/STELLA.CONFIG"
+      "STELLA_CONFIG": {
+        "$path": "test/STELLA_CONFIG"
       },
       "client": {
         "$path": "test/client"

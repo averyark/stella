@@ -12,7 +12,8 @@ local RunService = game:GetService("RunService")
 local root = script.Parent.Parent
 local dependencies = root.dependencies
 
-local clock = require(script.Parent.clock)
+local debugger = require(ReplicatedStorage.Packages.stella.kit.debugger)
+local clock = require(root.kit.clock)
 local limiter = require(script.Parent.limiter)
 local recycledThread = require(script.Parent.recycledThread)
 local Signal = require(dependencies.Signal)
@@ -153,7 +154,7 @@ stringValue.Name = "emptyEventIdentifier"
 
 local function makeEvent(self: types.event)
 	eventCache[self.identifier] = self
-    
+
 	if not channel:FindFirstChild(self.identifier) and self.kind == "Remote" then
 		local identifierSV = stringValue:Clone()
 		identifierSV.Name = self.identifier
@@ -203,7 +204,7 @@ local function addServerIncomingQueue(player: Player, packet: types.packet)
 			utility.warn("network: call packet dropped because it was sent with an invalid call status")
 			return false, 6
 		end
-		
+
 		if event.callHandler then
 			local callPromise = Promise.new(function(resolve)
 				resolve({ event.callHandler(packet.originPlayer, unpack(packet.params)) })
@@ -319,8 +320,7 @@ local function start()
 					return
 				end
 				if utility.settings.NETWORK_LIMIT_RATE then
-					playerLimiters[player] =
-						limiter.new(utility.settings.NETWORK_RPS, utility.settings.NETWORK_RPM)
+					playerLimiters[player] = limiter.new(utility.settings.NETWORK_RPS, utility.settings.NETWORK_RPM)
 				else
 					playerLimiters[player] = limiter.new(-1, -1) -- no limit
 				end
@@ -334,6 +334,13 @@ local function start()
 			end
 		end)
 		coreChannel:FireServer("clientConnected")
+
+		debugger.Append(function() 
+			iris.CollapsingHeader({ "Network analysis" })
+				local searchInput = iris.InputText({ "", "Search" })
+				--searchInput.text.value
+			iris.End()
+		end)
 	end
 
 	clock.new(1 / 60, function()

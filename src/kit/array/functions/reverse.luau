@@ -9,7 +9,7 @@ local t = require(script.Parent.Parent.Parent.Parent.dependencies.t)
     Created     > 18/01/2024
 --]]
 
-type array = {[number]: any}
+type array = { [number]: any }
 
 --[[
     @param array
@@ -18,14 +18,14 @@ type array = {[number]: any}
     Reverse an array
 ]]
 local function reverse(array: array)
-    local arraySize = #array
-    local reversedArray = table.create(arraySize)
+	local arraySize = #array
+	local reversedArray = table.create(arraySize)
 
-    for i = 1, arraySize do
-        reversedArray[i] = array[arraySize - i + 1]
-    end
+	for i = 1, arraySize do
+		reversedArray[i] = array[arraySize - i + 1]
+	end
 
-    return reversedArray
+	return reversedArray
 end
 
 return reverse

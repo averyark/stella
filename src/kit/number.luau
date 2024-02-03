@@ -491,7 +491,7 @@ end
 	print(mathUtil.manHatDist(workspace.A.Position, workspace.B.Position)) -- Output: 26.760003268719
 	```
 ]]
-mathUtil.manHatDist = function(a: (Vector2 | Vector3), b: (Vector2 | Vector3)): number
+mathUtil.manHatDist = function(a: Vector2 | Vector3, b: Vector2 | Vector3): number
 	if typeof(a) == "Vector2" and typeof(b) == "Vector2" then
 		return math.abs(a.X - b.X) + math.abs(a.Y - b.Y)
 	elseif typeof(a) == "Vector3" and typeof(b) == "Vector3" then
@@ -507,7 +507,7 @@ end
 	print(mathUtil.chebDist(workspace.A.Position, workspace.B.Position)) -- Output: 21.504999160767
 	```
 ]]
-mathUtil.chebDist = function(a: (Vector2 | Vector3), b: (Vector2 | Vector3)): number
+mathUtil.chebDist = function(a: Vector2 | Vector3, b: Vector2 | Vector3): number
 	if typeof(a) == "Vector2" and typeof(b) == "Vector2" then
 		return math.max(math.abs(a.X - b.X), math.abs(a.Y - b.Y))
 	elseif typeof(a) == "Vector3" and typeof(b) == "Vector3" then

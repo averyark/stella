@@ -35,18 +35,18 @@ local started = false
 network.new = event.new
 
 network.bindable = function(identifier: string): types.event
-    if main.events[identifier] then
-        return main.events[identifier]
-    end
+	if main.events[identifier] then
+		return main.events[identifier]
+	end
 	return event.new(identifier, "Local")
 end
 network.remote = function(identifier: string): types.event
-    if not started and isClient then
-        return event.stand(identifier, if isClient then "ReplicatedRemote" else "Remote")
-    end
-    if main.events[identifier] then
-        return main.events[identifier]
-    end
+	if not started and isClient then
+		return event.stand(identifier, if isClient then "ReplicatedRemote" else "Remote")
+	end
+	if main.events[identifier] then
+		return main.events[identifier]
+	end
 	if isClient then
 		local remote = main.events[identifier]
 		if remote then
@@ -56,20 +56,21 @@ network.remote = function(identifier: string): types.event
 		remote = Promise.retryWithDelay(function()
 			return Promise.new(function(resolve, reject)
 				local _remote = main.events[identifier] :: types.event?
-                if _remote then
-                    return resolve(remote)
-                end
-                return reject()
+				if _remote then
+					return resolve(remote)
+				end
+				return reject()
 			end)
 		end, 5, 1):await()
 
 		if remote then
 			return remote
 		end
-        return utility.warn(`network: failed to retrieve remote with identifier of {identifier}, is it registered on the server?`
+		return utility.warn(
+			`network: failed to retrieve remote with identifier of {identifier}, is it registered on the server?`
 		)
 	end
-    
+
 	return event.new(identifier, "Remote")
 end
 network.value = function<Value>(identifier: string, initialValue: Value): types.value
@@ -80,7 +81,7 @@ network.log = main.log
 network.EventEmitType = main.EventEmitType
 network.start = function()
 	if RunService:IsClient() then
-        main.start()
+		main.start()
 		local channel = ReplicatedStorage:FindFirstChild("__stellaNetworking")
 		local function registerClientEvent(identifier: string)
 			if main.events[identifier] then
@@ -104,13 +105,13 @@ network.start = function()
 				registerClientEvent(identifierSV.Name)
 			end
 		end
-        started = true
-    else
-        Promise.try(function() 
-            main.start()
-        end)
-        
-        started = true
+		started = true
+	else
+		Promise.try(function()
+			main.start()
+		end)
+
+		started = true
 	end
 end
 

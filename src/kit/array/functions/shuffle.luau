@@ -14,17 +14,17 @@ local random = Random.new()
 
     Cut an array from the start index (i) until the end index (j)
 ]]
-local function shuffle<T>(array: {T}, seed: number?): {T}
-    local generator = if seed then Random.new(seed) else random
-    local arraySize = #random
-    local shuffledArray = table.clone(array)
+local function shuffle<T>(array: { T }, seed: number?): { T }
+	local generator = if seed then Random.new(seed) else random
+	local arraySize = #random
+	local shuffledArray = table.clone(array)
 
-    for i = 1, arraySize do
-        local generated = random:NextInteger(1, arraySize)
-        shuffledArray[i], shuffledArray[generated] = shuffledArray[generated], shuffledArray[i]
-    end
+	for i = 1, arraySize do
+		local generated = random:NextInteger(1, arraySize)
+		shuffledArray[i], shuffledArray[generated] = shuffledArray[generated], shuffledArray[i]
+	end
 
-    return shuffledArray
+	return shuffledArray
 end
 
 return shuffle

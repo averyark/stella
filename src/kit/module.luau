@@ -147,7 +147,6 @@ module.start = function()
 		end
 	end
 
-
 	if utility.settings.DEBUG_ENABLED then
 		module.info.bench = bench
 		module.info.attempts = attempts
@@ -165,7 +164,7 @@ module.start = function()
 			benchLoadString =
 				`{benchLoadString}\n\t[{loadBench.identifier}]: ({number.decimalUnitFormat(loadBench.bench)})`
 		end
-		
+
 		--[[utility.print(
 			`Client Module Analysis Report:\n{string.rep("-", 30)}\nPreload queries: ({#attempts.preload}), Successful preloads: ({#attempts.preload - #errored.preload}), Failed preloads: ({#errored.preload}), Preload benchmarks:{benchPreloadString}\n{string.rep(
 				"-",

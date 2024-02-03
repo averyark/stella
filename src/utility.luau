@@ -88,7 +88,7 @@ local stellaSettingsFallback = {
 		[4] = Vector2.new(2360, 1340),
 		[5] = Vector2.new(3640, 2060),
 	},
-	UI_SCALE_TAG = "AutoScale"
+	UI_SCALE_TAG = "AutoScale",
 }
 
 export type settings = (typeof(stellaSettingsFallback) & {
@@ -102,12 +102,13 @@ export type settings = (typeof(stellaSettingsFallback) & {
 
 utility.settings = nil :: settings
 
-utility.settings = require(ReplicatedStorage["STELLA.CONFIG"])
+utility.settings = require(ReplicatedStorage["STELLA_CONFIG"])
 
 utility.print = makeStellaPrint
 utility.warn = makeStellaWarn
 utility.assert = makeStellaAssert
 utility.error = makeStellaError
 utility.isKind = isKind
+utility.iris = iris
 
 return utility

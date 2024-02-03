@@ -4,8 +4,8 @@ local reverse = require(script.functions.reverse)
 local shuffle = require(script.functions.shuffle)
 
 return {
-    reverse = reverse,
-    cut = cut,
-    merge = merge,
-    shuffle = shuffle
+	reverse = reverse,
+	cut = cut,
+	merge = merge,
+	shuffle = shuffle,
 }

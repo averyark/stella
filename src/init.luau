@@ -5,7 +5,7 @@ local root = script
 local dependencies = root.dependencies
 local kit = root.kit
 
-local ROOT_CONFIG = ReplicatedStorage:FindFirstChild("STELLA.CONFIG")
+local ROOT_CONFIG = ReplicatedStorage:FindFirstChild("STELLA_CONFIG")
 local __stella = require(ROOT_CONFIG)
 
 local Signal = require(dependencies.Signal)
@@ -55,13 +55,21 @@ local function typeStringTransform(value: any)
 				return "[REC_T_REF_2]"
 			end
 			if typeof(v) == "table" then
-				str =
-					`{str}{nocomma and "" or ","}\n{("    "):rep(i or 0)}[{typeStringTransform(k)}] = {tableTranslate(k, v, i, cache, "", true)}`
+				str = `{str}{nocomma and "" or ","}\n{("    "):rep(i or 0)}[{typeStringTransform(k)}] = {tableTranslate(
+					k,
+					v,
+					i,
+					cache,
+					"",
+					true
+				)}`
 				nocomma = false
 			else
 				str = if not str
 					then "{\n" .. `{("    "):rep(i or 0)}[{typeStringTransform(k)}] = {typeStringTransform(v)}`
-					else `{str}{nocomma and "" or ","}\n{("    "):rep(i or 0)}[{typeStringTransform(k)}] = {typeStringTransform(v)}`
+					else `{str}{nocomma and "" or ","}\n{("    "):rep(i or 0)}[{typeStringTransform(k)}] = {typeStringTransform(
+						v
+					)}`
 				nocomma = false
 			end
 		end
@@ -115,9 +123,9 @@ local function start()
                     iris.Text({string.format("Average %.3f ms/frame (%.1f FPS)", rollingDT.value*1000, 1/rollingDT.value)})
                 iris.End()
             end)]]
-            repeat
-                task.wait()
-            until ROOT_CONFIG:FindFirstChild("coreModulesLoaded")
+			repeat
+				task.wait()
+			until ROOT_CONFIG:FindFirstChild("coreModulesLoaded")
 
 			network.start()
 			data.start()
@@ -128,20 +136,23 @@ local function start()
 			local serverBench = {} :: typeof(module.info)
 
 			if utility.settings.DEBUG_ENABLED then
-
-				debugger.Append(function() 
-					iris.CollapsingHeader({"Module analysis"})
+				debugger.Append(function()
+					iris.CollapsingHeader({ "Module analysis" })
 					do
 						iris.Text("Client Module Load-time Analysis")
 						iris.Separator()
-						iris.Text({`Preload queries: {#module.info.attempts.preload} Load queries: {#module.info.attempts.load}`})
-						iris.Text({`Failed preload queries: {#module.info.errored.preload} Failed load queries: {#module.info.errored.load}`})
-						
+						iris.Text({
+							`Preload queries: {#module.info.attempts.preload} Load queries: {#module.info.attempts.load}`,
+						})
+						iris.Text({
+							`Failed preload queries: {#module.info.errored.preload} Failed load queries: {#module.info.errored.load}`,
+						})
+
 						local merge = {}
 
 						for _, bench in pairs(module.info.bench.preload) do
 							merge[bench.identifier] = {
-								preload = bench.bench
+								preload = bench.bench,
 							}
 						end
 						for _, bench in pairs(module.info.bench.load) do
@@ -150,79 +161,87 @@ local function start()
 								tb.load = bench.bench
 							else
 								merge[bench.identifier] = {
-									load = bench.bench
+									load = bench.bench,
 								}
 							end
 						end
 
-						iris.Table({3})
+						iris.Table({ 3 })
 							iris.NextRow()
-							iris.Text("Module identifier")
-							iris.NextColumn()
-							iris.Text("Preload bench")
-							iris.NextColumn()
-							iris.Text("Load bench")
+								iris.Text("Module identifier")
+								iris.NextColumn()
+								iris.Text("Preload bench")
+								iris.NextColumn()
+								iris.Text("Load bench")
 							iris.NextRow()
 							for identifier, bench in pairs(merge) do
 								iris.NextColumn()
-								iris.Text({identifier})
+								iris.Text({ identifier })
 								iris.NextColumn()
 								if bench.preload then
-									iris.Text({number.decimalUnitFormat(bench.preload)})
+									iris.Text({ number.decimalUnitFormat(bench.preload) })
 								else
-									iris.Text({""})
+									iris.Text({ "" })
 								end
 								iris.NextColumn()
 								if bench.load then
-									iris.Text({number.decimalUnitFormat(bench.load)})
+									iris.Text({ number.decimalUnitFormat(bench.load) })
 								else
-									iris.Text({""})
+									iris.Text({ "" })
 								end
 								iris.NextRow()
 							end
 						iris.End()
 
-						iris.Text{(`Observed startup errors ({#module.info.errored.preload + #module.info.errored.load})`)}
+						iris.Text({
+							`Observed startup errors ({#module.info.errored.preload + #module.info.errored.load})`,
+						})
 						iris.Separator()
 						for _, value in pairs(module.info.errored.preload) do
 							iris.TextWrapped({
-								`[{value.identifier}]: Error occurred at preload \n\n {value.err.error}`, Color3.fromRGB(255, 68, 68)
+								`[{value.identifier}]: Error occurred at preload \n\n {value.err.error}`,
+								Color3.fromRGB(255, 68, 68),
 							})
 						end
 						for _, value in pairs(module.info.errored.load) do
 							iris.TextWrapped({
-								`[{value.identifier}]: <font color="rgb(255, 68, 68)">Error occurred at load \n\n {value.err.error}</font>`, 
+								`[{value.identifier}]: <font color="rgb(255, 68, 68)">Error occurred at load \n\n {value.err.error}</font>`,
 							})
 						end
-						
+
 						iris.Separator()
 					end
-					if serverBench.attempts then do
-						iris.Text("Server Module Load-time Analysis")
-						iris.Separator()
-						
-						iris.Text({`Preload queries: {#serverBench.attempts.preload} Load queries: {#serverBench.attempts.load}`})
-						iris.Text({`Failed preload queries: {#serverBench.errored.preload} Failed load queries: {#serverBench.errored.load}`})
-						
-						local merge = {}
+					if serverBench.attempts then
+						do
+							iris.Text("Server Module Load-time Analysis")
+							iris.Separator()
 
-						for _, bench in pairs(serverBench.bench.preload) do
-							merge[bench.identifier] = {
-								preload = bench.bench
-							}
-						end
-						for _, bench in pairs(serverBench.bench.load) do
-							local tb = merge[bench.identifier]
-							if tb then
-								tb.load = bench.bench
-							else
+							iris.Text({
+								`Preload queries: {#serverBench.attempts.preload} Load queries: {#serverBench.attempts.load}`,
+							})
+							iris.Text({
+								`Failed preload queries: {#serverBench.errored.preload} Failed load queries: {#serverBench.errored.load}`,
+							})
+
+							local merge = {}
+
+							for _, bench in pairs(serverBench.bench.preload) do
 								merge[bench.identifier] = {
-									load = bench.bench
+									preload = bench.bench,
 								}
 							end
-						end
+							for _, bench in pairs(serverBench.bench.load) do
+								local tb = merge[bench.identifier]
+								if tb then
+									tb.load = bench.bench
+								else
+									merge[bench.identifier] = {
+										load = bench.bench,
+									}
+								end
+							end
 
-						iris.Table({3})
+							iris.Table({ 3 })
 							iris.NextRow()
 							iris.Text("Module identifier")
 							iris.NextColumn()
@@ -232,53 +251,137 @@ local function start()
 							iris.NextRow()
 							for identifier, bench in pairs(merge) do
 								iris.NextColumn()
-								iris.Text({identifier})
+								iris.Text({ identifier })
 								iris.NextColumn()
 								if bench.preload then
-									iris.Text({number.decimalUnitFormat(bench.preload)})
+									iris.Text({ number.decimalUnitFormat(bench.preload) })
 								else
-									iris.Text({""})
+									iris.Text({ "" })
 								end
 								iris.NextColumn()
 								if bench.load then
-									iris.Text({number.decimalUnitFormat(bench.load)})
+									iris.Text({ number.decimalUnitFormat(bench.load) })
 								else
-									iris.Text({""})
+									iris.Text({ "" })
 								end
 								iris.NextRow()
 							end
+							iris.End()
+
+							iris.Text({
+								`Observed startup errors ({#serverBench.errored.preload + #serverBench.errored.load})`,
+							})
+							iris.Separator()
+							for _, value in pairs(serverBench.errored.preload) do
+								iris.TextWrapped({
+									`[{value.identifier}]: Error occurred at preload \n\n {value.err.error}`,
+									Color3.fromRGB(255, 68, 68),
+								})
+							end
+							for _, value in pairs(serverBench.errored.load) do
+								iris.TextWrapped({
+									`[{value.identifier}]: <font color="rgb(255, 68, 68)">Error occurred at load \n\n {value.err.error}</font>`,
+								})
+							end
+
+							iris.Separator()
+						end
+					end
+					iris.End()
+
+					iris.CollapsingHeader({ "Action Controls" })
+					iris.SeparatorText({ "Actions" })
+					for _, action in actions.Objects do
+						local isRootEnabled = action.Enabled and action.Loaded and (not action.Category or actions.IsCategoryActive(action.Category))
+						iris.Tree({`id: {action.Id}`})
+							iris.SeparatorText("Metadata")
+							iris.Table({ 2 })
+								iris.Text("Index")
+								iris.NextColumn()
+								iris.Text("Value")
+								iris.NextColumn()
+									iris.Text({"Tags"})
+									iris.NextColumn()
+									iris.Text(action.Category or "")
+								iris.NextColumn()
+									iris.Text({"Enabled"})
+									iris.NextColumn()
+									iris.Text({tostring(action.Enabled), [iris.Args.Text.Color]= action.Enabled and Color3.new(0,1,0) or action.Enabled and Color3.new(1,0,0)})
+								iris.NextColumn()
+									iris.Text({"Loaded"})
+									iris.NextColumn()
+									iris.Text({tostring(action.Loaded), [iris.Args.Text.Color]= action.Loaded and Color3.new(0,1,0) or action.Enabled and Color3.new(1,0,0)})
+								iris.NextColumn()
+									iris.Text({"IsActivated"})
+									iris.NextColumn()
+									iris.Text({tostring(action.IsActivated), [iris.Args.Text.Color]= action.IsActivated and Color3.new(0,1,0) or action.Enabled and Color3.new(1,0,0)})
+								iris.NextColumn()
+							iris.End()
+							iris.SeparatorText("Inputs")
+							iris.Table({ 4 })
+								iris.Text("Identifier")
+								iris.NextColumn()
+								iris.Text("Input")
+								iris.NextColumn()
+								iris.Text("Tags")
+								iris.NextColumn()
+								iris.Text("isListening")
+								for identifier, input in action.Input do
+									iris.NextColumn()
+									iris.Text({identifier})
+									iris.NextColumn()
+									if type(input.value) == "table" then
+										local newValue = table.clone(input.value)
+										for i, v in newValue do
+											newValue[i] = v.Name
+										end
+										iris.Text(table.concat(newValue, ", "))
+									else
+										iris.Text(tostring(input.value))	
+									end
+									
+									iris.NextColumn()
+									iris.Text(input.category or "")
+									iris.NextColumn()
+									if not isRootEnabled then
+										iris.Text({"false", [iris.Args.Text.Color]=Color3.new(1,0,0)})
+									else
+										if not action.Category or actions.IsCategoryActive(action.Category) then
+											iris.Text({"true", [iris.Args.Text.Color]=Color3.new(0,1,0)})
+										else
+											iris.Text({"false", [iris.Args.Text.Color]=Color3.new(1,0,0)})
+										end
+									end
+								end
+							iris.End()
 						iris.End()
-
-						iris.Text{(`Observed startup errors ({#serverBench.errored.preload + #serverBench.errored.load})`)}
-						iris.Separator()
-						for _, value in pairs(serverBench.errored.preload) do
-							iris.TextWrapped({
-								`[{value.identifier}]: Error occurred at preload \n\n {value.err.error}`, Color3.fromRGB(255, 68, 68)
-							})
-						end
-						for _, value in pairs(serverBench.errored.load) do
-							iris.TextWrapped({
-								`[{value.identifier}]: <font color="rgb(255, 68, 68)">Error occurred at load \n\n {value.err.error}</font>`, 
-							})
-						end
-						
-						iris.Separator()
-					end end
+					end
+					
+					iris.SeparatorText({ "Tags" })
+					iris.Table({ 2 })
+							iris.Text("TagId")
+							iris.NextColumn()
+							iris.Text("Enabled")
+							for tagId, state in actions.CategoryStates do
+								iris.NextColumn()
+								iris.Text(tagId)
+								iris.NextColumn()
+								if state then
+									iris.Text({"true", [iris.Args.Text.Color]=Color3.new(0,1,0)})
+								else
+									iris.Text({"false", [iris.Args.Text.Color]=Color3.new(1,0,0)})
+								end
+							end
+						iris.End()
 					iris.End()
-
-					iris.CollapsingHeader({"Network analysis"})
-					iris.Button({"Observe Packets"})
-					iris.End()
-					iris.CollapsingHeader({"Controls analysis"})
-					--iris.Text({`Focus: {controls.focusing}`})
-					iris.End()
+					
 				end, 1)
 
 				local values = {
-					serverModuleLog = network.value("serverModuleLog", {})
+					serverModuleLog = network.value("serverModuleLog", {}),
 				}
 
-				values.serverModuleLog:observe(function(old, new) 
+				values.serverModuleLog:observe(function(old, new)
 					serverBench = new
 				end)
 			end
@@ -287,18 +390,18 @@ local function start()
 			data.start()
 
 			local values = {
-				serverModuleLog = network.value("serverModuleLog", {})
+				serverModuleLog = network.value("serverModuleLog", {}),
 			}
 
 			local coreModulesLoadedTag = Instance.new("StringValue")
-            coreModulesLoadedTag.Name = "coreModulesLoaded"
-            coreModulesLoadedTag.Parent = ROOT_CONFIG
+			coreModulesLoadedTag.Name = "coreModulesLoaded"
+			coreModulesLoadedTag.Parent = ROOT_CONFIG
 
 			module.start()
 
 			local serverModulesLoadedTag = Instance.new("StringValue")
-            serverModulesLoadedTag.Name = "serverModulesLoaded"
-            serverModulesLoadedTag.Parent = ROOT_CONFIG
+			serverModulesLoadedTag.Name = "serverModulesLoaded"
+			serverModulesLoadedTag.Parent = ROOT_CONFIG
 
 			values.serverModuleLog:set(module.info)
 		end
@@ -309,7 +412,6 @@ local function start()
 	return stellaStartupPromise
 end
 
-
 type DATA_TEMPLATE = typeof(__stella.DATA_TEMPLATE)
 type connection = typeof(Signal.new():Connect(function() end))
 
@@ -317,10 +419,10 @@ stella.iris = iris
 stella.module = module
 stella.number = number
 stella.tween = tween
-stella.data = data :: typeof(data) & { 
-	get: () -> (DATA_TEMPLATE),
-	connect: (any, path: { string }, f: (changes: { new: any, old: any }) -> ()) -> (connection),
-	wait: () -> ()
+stella.data = data :: typeof(data) & {
+	get: () -> DATA_TEMPLATE,
+	connect: (any, path: { string }, f: (changes: { new: any, old: any }) -> ()) -> connection,
+	wait: () -> (),
 }
 stella.actions = actions
 stella.array = array

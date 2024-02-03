@@ -9,6 +9,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local stella = require(ReplicatedStorage.Packages.stella)
 local network = stella.network
 
+local actions = require(ReplicatedStorage.STELLA_CONFIG.ACTIONS)
+local connections = require(ReplicatedStorage.STELLA_CONFIG.CONNECTIONS)
+
 -- network.remote()
 
 stella.module.setModuleFolder(ReplicatedStorage.client)

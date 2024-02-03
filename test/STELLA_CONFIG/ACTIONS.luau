@@ -11,17 +11,21 @@ local actions = stella.actions
     uiFocused
 ]]
 
+actions.Category("noMovement", false)
+actions.Category("arrested", false)
+actions.Category("noJump", false)
+
 return {
-    Forward = actions.new("$noMovement&&arrested")
+    Forward = actions.new("moveForward", "$noMovement&&arrested")
         :SetPrimitiveInput("keyboard", Enum.KeyCode.W),
         --:SetPrimitiveInput("console", ),
-    Leftward = actions.new("$noMovement")
+    Leftward = actions.new("moveLeftward", "$noMovement&&arrested")
         :SetPrimitiveInput("keyboard", Enum.KeyCode.A),
-    Downward = actions.new("$noMovement")
+    Downward = actions.new("moveDownward", "$noMovement&&arrested")
         :SetPrimitiveInput("keyboard", Enum.KeyCode.S),
-    Rightward = actions.new("$noMovement")
+    Rightward = actions.new("moveRightward", "$noMovement&&arrested")
         :SetPrimitiveInput("keyboard", Enum.KeyCode.D),
-    Jump = actions.new("$noJump&&arrested")
+    Jump = actions.new("jump", "$noJump&&arrested")
         :SetPrimitiveInput("keyboard", Enum.KeyCode.Space)
         :SetPrimitiveInput("console", Enum.KeyCode.ButtonA, "$uiFocused")
 }

@@ -87,9 +87,8 @@ function data.new(key: string, datastore)
 
 		changed = Signal.new(),
 
-		_maid = Janitor.new()
+		_maid = Janitor.new(),
 	}, data)
-
 
 	return self
 end

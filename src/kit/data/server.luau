@@ -125,12 +125,12 @@ server.start = function()
 	end)
 		:andThen(function(store)
 			datastore = store
-			remotes.datastoreOnline:emit(network.EventEmitType.AllPlayers(), "datastoreOnline")
+			remotes.datastoreOnline:emitAll("datastoreOnline")
 			isDatastoreActive = true
 		end)
 		:catch(function(err)
 			warn(err.error)
-			remotes.datastoreOnline:emit(network.EventEmitType.AllPlayers(), "datastoreOffline", err)
+			remotes.datastoreOnline:emitAll( "datastoreOffline", err)
 			isDatastoreActive = false
 			datastoreError = err
 		end)

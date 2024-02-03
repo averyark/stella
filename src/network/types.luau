@@ -35,7 +35,11 @@ export type event = {
 	limiter: limiter,
 
 	emit: (event, ...any) -> (),
-	on:<Arguments> (event, callback: (...Arguments) -> ()) -> connection,
+	emitAll: (event, ...any) -> (),
+	emitExcept: (event, exceptions: {Player}, ...any) -> (),
+	emitOnly: (event, inclusion: {Player}, ...any) -> (),
+
+	on: <Arguments>(event, callback: (...Arguments) -> ()) -> connection,
 	call: (event, ...any) -> promise,
 	onCall: <Parameter, Return>(self: event, callback: (...Parameter) -> ...Return) -> (),
 }
@@ -44,9 +48,9 @@ export type value = {
 	limiter: limiter,
 	value: any,
 
-	observe: <Value> (value, callback: (newValue: Value, oldValue: Value) -> ()) -> (),
-	set: <Value> (value, Value) -> (),
-	get: <Value> (value) -> (Value),
+	observe: <Value>(value, callback: (newValue: Value, oldValue: Value) -> ()) -> (),
+	set: <Value>(value, Value) -> (),
+	get: <Value>(value) -> Value,
 }
 export type limiter = {
 	maxRPS: number,

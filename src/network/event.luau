@@ -27,7 +27,7 @@ local EventEmitType = main.EventEmitType
 
 local class = {}
 
-local standing = {Local = {}, Remote = {}, ReplicatedRemote = {}}
+local standing = { Local = {}, Remote = {}, ReplicatedRemote = {} }
 
 local event = {}
 
@@ -38,7 +38,7 @@ local function stand(identifier: string, kind: types.EventType)
 
 	standing[kind][identifier] = setmetatable({}, event)
 
-	return standing[kind][identifier] 
+	return standing[kind][identifier]
 end
 
 do
@@ -75,15 +75,13 @@ do
 	end
 
 	function event.Destroy(self: event)
-		
 		self.maid:Destroy()
 
 		main.removeEvent(self)
 	end
 
 	function event.on<Argument>(self: event, callback: (...Argument) -> ())
-		
-		return self.signal:Connect(callback:: () -> ())
+		return self.signal:Connect(callback :: () -> ())
 	end
 
 	function event.emit(self: event, ...: any?)
@@ -92,21 +90,15 @@ do
 		elseif self.kind == "Remote" or self.kind == "ReplicatedRemote" then
 			local parameters = { ... }
 			local param1 = parameters[1]
-			local eventEmitType = if t.table(param1) and param1.kind then param1 else nil
-
-			if typeof(param1) == "Instance" and param1:IsA("Player") then
-				eventEmitType = EventEmitType.Player(param1)
-			end
-
-			utility.assert(isServer and eventEmitType or not isServer, "network: missing EventEmitType")
-
-			if eventEmitType then
-				table.remove(parameters, 1)
-			end
-
 			local packet = {}
 
-			packet.eventEmitType = eventEmitType or EventEmitType.Server()
+			if isServer then
+				table.remove(parameters, 1)
+				packet.eventEmitType = EventEmitType.Player(param1)
+			else
+				packet.eventEmitType = EventEmitType.Server()
+			end
+			
 			packet.params = parameters
 			packet.identifier = self.identifier
 
@@ -114,10 +106,30 @@ do
 		end
 	end
 
-	function event.emitAll(self: event, ...:any)
+	function event.emitAll(self: event, ...: any)
 		local packet = {}
 
 		packet.eventEmitType = EventEmitType.AllPlayers()
+		packet.params = { ... }
+		packet.identifier = self.identifier
+
+		main.addOutgoingQueue(self, packet)
+	end
+
+	function event.emitExcept(self: event, exceptions: {Player}, ...: any)
+		local packet = {}
+
+		packet.eventEmitType = EventEmitType.ExceptSomePlayers(exceptions)
+		packet.params = { ... }
+		packet.identifier = self.identifier
+
+		main.addOutgoingQueue(self, packet)
+	end
+
+	function event.emitOnly(self: event, inclusion: {Player}, ...: any)
+		local packet = {}
+
+		packet.eventEmitType = EventEmitType.SomePlayers(inclusion)
 		packet.params = { ... }
 		packet.identifier = self.identifier
 

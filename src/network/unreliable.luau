@@ -27,7 +27,7 @@ local EventEmitType = main.EventEmitType
 
 local class = {}
 
-local standing = {Local = {}, Remote = {}, ReplicatedRemote = {}}
+local standing = { Local = {}, Remote = {}, ReplicatedRemote = {} }
 
 local unreliable = {}
 
@@ -38,7 +38,7 @@ local function stand(identifier: string, kind: types.EventType)
 
 	standing[kind][identifier] = setmetatable({}, unreliable)
 
-	return standing[kind][identifier] 
+	return standing[kind][identifier]
 end
 
 do
@@ -75,15 +75,13 @@ do
 	end
 
 	function unreliable.Destroy(self: unreliable)
-		
 		self.maid:Destroy()
 
 		main.removeEvent(self)
 	end
 
 	function unreliable.on<Argument>(self: unreliable, callback: (...Argument) -> ())
-		
-		return self.signal:Connect(callback:: () -> ())
+		return self.signal:Connect(callback :: () -> ())
 	end
 
 	function unreliable.emit(self: unreliable, ...: any?)
