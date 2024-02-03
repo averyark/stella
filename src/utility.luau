@@ -89,6 +89,10 @@ local stellaSettingsFallback = {
 		[5] = Vector2.new(3640, 2060),
 	},
 	UI_SCALE_TAG = "AutoScale",
+
+	TAGS = {
+			
+	}
 }
 
 export type settings = (typeof(stellaSettingsFallback) & {

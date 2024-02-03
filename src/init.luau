@@ -27,6 +27,7 @@ local actions = require(kit.actions)
 local data = require(kit.data)
 local network = require(root.network)
 local debugger = require(kit.debugger)
+local tag = require(kit.tag)
 
 local stella = {}
 
@@ -132,6 +133,7 @@ local function start()
 			actions.start()
 			module.start()
 			uiAutoScale.start()
+			tag.start()
 
 			local serverBench = {} :: typeof(module.info)
 
@@ -388,6 +390,7 @@ local function start()
 		else
 			network.start()
 			data.start()
+			tag.start()
 
 			local values = {
 				serverModuleLog = network.value("serverModuleLog", {}),
@@ -428,6 +431,7 @@ stella.actions = actions
 stella.array = array
 stella.uiAutoScale = uiAutoScale
 stella.debugger = debugger
+stella.tag = tag
 
 stella.start = start
 stella.network = network

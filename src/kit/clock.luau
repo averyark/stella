@@ -53,7 +53,7 @@ do
 
 		if self.dt >= self.interval then
 			self.dt -= self.interval
-			self.callback()
+			self.callback(dt)
 		end
 	end
 
