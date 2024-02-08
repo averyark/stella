@@ -11,10 +11,6 @@ local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
 local StarterPlayer = game:GetService("StarterPlayer")
 
-if RunService:IsClient() then
-	return error("CANNOT BE CALLED ON THE CLIENT")
-end
-
 local root = script.Parent.Parent.Parent
 
 local dependencies = root.dependencies
@@ -37,22 +33,42 @@ local checkIfExist = helper.checkIfExist
 local compare = helper.compare
 
 local data = {}
-
 data.__index = data
 
-function data.apply(self: dataClass, f)
-	local snapchot = deepCopy(self.data)
+local function new(key: string, datastore)
+	local profile =
+		datastore:LoadProfileAsync(key) :: typeof(ProfileService.GetProfileStore("", {}):LoadProfileAsync(""))
 
-	Promise.try(f, self.data)
+	local self = setmetatable({
+		Profile = profile,
+		Key = key,
+		Data = profile.Data,
+
+		ConnectedFunctions = {},
+
+		OnChanged = Signal.new(),
+
+		_maid = Janitor.new(),
+	}, data)
+
+	return self
+end
+
+export type dataClass = typeof(new(...))
+
+function data.Apply(self: dataClass, f)
+	local snapchot = deepCopy(self.Data)
+
+	return Promise.try(f, self.Data)
 		:andThen(function()
-			local changes = compare(self.data, snapchot)
+			local changes = compare(self.Data, snapchot)
 
-			self.changed:Fire(changes)
+			self.OnChanged:Fire(changes)
 
-			for pathTable, connectedFunction in pairs(self.connectedFunctions) do
+			for pathTable, connectedFunction in pairs(self.ConnectedFunctions) do
 				if match(pathTable, changes) then
 					Promise.try(connectedFunction, {
-						new = fromPath(self.data, pathTable),
+						new = fromPath(self.Data, pathTable),
 						old = fromPath(snapchot, pathTable),
 					})
 				end
@@ -62,39 +78,18 @@ function data.apply(self: dataClass, f)
 end
 
 function data.Destroy(self: dataClass)
-	self.profile:Release()
+	self.Profile:Release()
 end
 
-function data.connect(self: dataClass, path, f: (changes: { new: any, old: any? }) -> ())
+function data.Connect(self: dataClass, path, f: (changes: { new: any, old: any? }) -> ())
 	assert(t.table(path))
 	assert(t.callback(f))
-	self.connectedFunctions[path] = f
+	self.ConnectedFunctions[path] = f
 	f({
-		new = fromPath(self.data, path),
+		new = fromPath(self.Data, path),
 	})
 end
 
-function data.new(key: string, datastore)
-	local profile =
-		datastore:LoadProfileAsync(key) :: typeof(ProfileService.GetProfileStore("", {}):LoadProfileAsync(""))
-
-	local self = setmetatable({
-		profile = profile,
-		key = key,
-		data = profile.Data,
-
-		connectedFunctions = {},
-
-		changed = Signal.new(),
-
-		_maid = Janitor.new(),
-	}, data)
-
-	return self
-end
-
-export type dataClass = typeof(data.new(""))
-
 return {
-	new = data.new,
+	new = new,
 }

@@ -34,7 +34,7 @@ end
 
 function test.preload()
     ReplicatedStorage.Remote.OnServerEvent:Connect(function(player, number)
-        TAGS.Stun:Add(player.Character, number)
+        warn(TAGS.Stun:Add(player.Character, number))
     end)
     Players.PlayerAdded:Connect(function(player) 
         player.CharacterAdded:Connect(function() 
@@ -52,6 +52,23 @@ function test.preload()
             TAGS.Stun:ListenToInstance(player.Character, print)
         end
     end
+
+    CONNECTIONS.test:On(function(...)
+        print(...)
+    end)
+    CONNECTIONS.test:EmitAll(1, "a", true, false)
+
+    task.spawn(function() 
+        while true do
+            for _, player in Players:GetPlayers() do
+                data.GetProfile(player):Apply(function(dat) 
+                    dat.Coin += 100
+                end)
+            end
+            CONNECTIONS.test:EmitAll(math.random(0.5, 1000), "a", true, false)
+            task.wait(2)
+        end
+    end)
 end
 
 return module.new("test", test)

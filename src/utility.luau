@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local root = script.Parent
 local dependencies = root.dependencies
 
+local number = require(root.kit.number)
 local Signal = require(dependencies.Signal)
 local Janitor = require(dependencies.Janitor)
 local Promise = require(dependencies.Promise)
@@ -32,6 +33,75 @@ end
 local function makeStellaError(level: number, ...: string)
 	local message = table.concat({ ... }, "")
 	error(message, level)
+end
+
+local function typeStringTransform(value: any, sameLine: boolean?)
+	local newLine = sameLine and "" or "\n"
+	local space = sameLine and " " or "    "
+	local valueType = typeof(value)
+
+	local function numberTransformation(n)
+		local rounded = math.round(n * 10000) / 10000
+		if math.abs(rounded) == 0 then
+			return 0
+		end
+		return if rounded > 999 then number.commaFormat(rounded) else tostring(rounded)
+	end
+
+	local function tableTranslate(key, val, i, cache, str, nocomma)
+		str = str and str .. "{" or str
+		if table.find(cache, val) then
+			return "[REC_T_REF_1]"
+		end
+		table.insert(cache, val)
+		i = i and i + 1 or (sameLine and 0 or 1)
+		for k, v in pairs(val) do
+			if table.find(cache, v) then
+				return "[REC_T_REF_2]"
+			end
+			if typeof(v) == "table" then
+				str = `{str}{nocomma and "" or ","}{newLine}{(space):rep(i or 0)}[{typeStringTransform(k)}] = {tableTranslate(
+					k,
+					v,
+					i,
+					cache,
+					"",
+					true
+				)}`
+				nocomma = false
+			else
+				str = if not str
+					then "{" .. newLine .. `{(space):rep(i or 0)}[{typeStringTransform(k)}] = {typeStringTransform(v)}`
+					else `{str}{nocomma and "" or ","}{newLine}{(space):rep(i or 0)}[{typeStringTransform(k)}] = {typeStringTransform(
+						v
+					)}`
+				nocomma = false
+			end
+		end
+		if not str then
+			str = "{}"
+		else
+			str = str .. `{newLine}{(space):rep(i - 1 or 0)}}`
+		end
+		task.wait()
+		return str
+	end
+
+	if valueType == "table" then
+		return tableTranslate("", value, nil, {}, "", true)
+	elseif valueType == "string" then
+		return `"{value}"`
+	elseif valueType == "number" then
+		return numberTransformation(value)
+	elseif valueType == "Vector3" then
+		local x, y, z = value.X, value.Y, value.Z
+		return `Vector3({numberTransformation(x)}, {numberTransformation(y)}, {numberTransformation(z)})`
+	elseif valueType == "function" then
+		return "function"
+	elseif valueType == "Instance" then
+		return `(class: {value.ClassName})[{value.Name})]`
+	end
+	return tostring(value)
 end
 
 local function isKind(a: { kind: string, [any]: any }, b: string)
@@ -114,5 +184,6 @@ utility.assert = makeStellaAssert
 utility.error = makeStellaError
 utility.isKind = isKind
 utility.iris = iris
+utility.typeStringTransform = typeStringTransform
 
 return utility

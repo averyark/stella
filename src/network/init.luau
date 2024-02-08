@@ -12,6 +12,7 @@ local root = script.Parent
 local dependencies = root.dependencies
 
 local utility = require(script.Parent.utility)
+local encode = require(script.encode)
 local Signal = require(dependencies.Signal)
 local Janitor = require(dependencies.Janitor)
 local Promise = require(dependencies.Promise)
@@ -29,6 +30,7 @@ local types = require(script.types)
 local value = require(script.value)
 
 local isClient = RunService:IsClient()
+local isStudio = RunService:IsStudio()
 
 local started = false
 
@@ -41,6 +43,10 @@ network.bindable = function(identifier: string): types.event
 	return event.new(identifier, "Local")
 end
 network.remote = function(identifier: string): types.event
+	if isStudio then
+		identifier = encode(identifier)
+	end
+	
 	if not started and isClient then
 		return event.stand(identifier, if isClient then "ReplicatedRemote" else "Remote")
 	end
@@ -74,6 +80,9 @@ network.remote = function(identifier: string): types.event
 	return event.new(identifier, "Remote")
 end
 network.value = function<Value>(identifier: string, initialValue: Value): types.value
+	if not isStudio then
+		identifier = encode(identifier)
+	end
 	return value.new(identifier, initialValue, network.remote(identifier))
 end
 

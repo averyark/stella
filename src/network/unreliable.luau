@@ -105,6 +105,7 @@ do
 			packet.eventEmitType = eventEmitType or EventEmitType.Server()
 			packet.params = parameters
 			packet.identifier = self.identifier
+			packet.clock = os.time()
 
 			main.addOutgoingQueue(self, packet)
 		end

@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local stella = require(ReplicatedStorage.Packages.stella)
+local CONNECTIONS = require(ReplicatedStorage.STELLA_CONFIG.CONNECTIONS)
 
 local module = stella.module
 local data = stella.data
@@ -24,7 +25,9 @@ function test.load()
 end
 
 function test.preload()
+    CONNECTIONS.test:On(function() 
     
+    end)
 end
 
 return module.new("test", test)

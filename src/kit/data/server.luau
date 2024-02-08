@@ -45,8 +45,8 @@ local datastore
 local loadPlayerData = function(player, store)
 	local data = dataHandler.new("PLAYER/" .. player.UserId, store)
 
-	data.profile:AddUserId(player.UserId)
-	data.profile:Reconcile()
+	data.Profile:AddUserId(player.UserId)
+	data.Profile:Reconcile()
 
 	if data == nil then
 		return player:Kick("DATASTORE ERROR")
@@ -61,33 +61,33 @@ local loadPlayerData = function(player, store)
 			playerDataCache[player] = nil
 		end
 	end))
-	data._maid:Add(data.changed:Connect(function(changes)
-		remotes.dataChanged:emit(player, changes)
+	data._maid:Add(data.OnChanged:Connect(function(changes)
+		remotes.dataChanged:Emit(player, changes)
 	end))
 
-	return data.data
+	return data.Data
 end
 
 -- >> TYPE
 local TYPE = function()
 	local public = {}
 
-	local settings = utility.settings.DATA_TEMPLATE
+	local settings = require(ReplicatedStorage.STELLA_CONFIG)
 
-	public.profile = ProfileService.GetProfileStore():LoadProfileAsync()
-	public.data = settings.DATA_TEMPLATE
-	public.changed = Signal.new()
+	public.Profile = ProfileService.GetProfileStore():LoadProfileAsync()
+	public.Data = settings.DATA_TEMPLATE
+	public.OnChanged = Signal.new()
 
 	type template = typeof(settings.DATA_TEMPLATE)
 
-	function public:apply(f: (template) -> ()) end
+	function public:Apply(f: (template) -> ()) return Promise.try(function() end) end
 
-	function public:connect(key: { string }, f: (changes: { new: any, old: any? }) -> ()) end
+	function public:Connect(key: { string }, f: (changes: { new: any, old: any? }) -> ()) end
 
 	return public
 end
 
-server.waitForDataStore = function()
+server.WaitForDataStore = function()
 	if isDatastoreActive then
 		return
 	end
@@ -98,19 +98,19 @@ server.waitForDataStore = function()
 end
 
 server.start = function()
-	remotes.datastoreOnline:onCall(function(player)
+	remotes.datastoreOnline:OnCall(function(player)
 		if datastoreError then
-			remotes.datastoreOffline:emit(player, datastoreError)
+			remotes.datastoreOffline:Emit(player, datastoreError)
 		end
 		return isDatastoreActive
 	end)
 
-	remotes.updateData:on(function(player, ...)
-		server.waitForDataStore()
+	remotes.updateData:On(function(player, ...)
+		server.WaitForDataStore()
 
 		local data = loadPlayerData(player, datastore)
 
-		remotes.dataUpdated:emit(player, data)
+		remotes.dataUpdated:Emit(player, data)
 	end)
 
 	Promise.try(function()
@@ -119,24 +119,22 @@ server.start = function()
 
 		assert(isValid, "Datastore failed to load")
 
-		local profile = ProfileService.GetProfileStore(utility.settings.DATA_SCOPE, utility.settings.DATA_TEMPLATE)
-
 		return _datastore
 	end)
 		:andThen(function(store)
 			datastore = store
-			remotes.datastoreOnline:emitAll("datastoreOnline")
+			remotes.datastoreOnline:EmitAll("datastoreOnline")
 			isDatastoreActive = true
 		end)
 		:catch(function(err)
-			warn(err.error)
-			remotes.datastoreOnline:emitAll( "datastoreOffline", err)
+			warn(err)
+			remotes.datastoreOnline:EmitAll( "datastoreOffline", err)
 			isDatastoreActive = false
 			datastoreError = err
 		end)
 end
 
-server.getPlayer = function(player): typeof(TYPE())?
+server.GetProfile = function(player): typeof(TYPE())?
 	if player:IsDescendantOf(Players) then
 		if not playerDataCache[player] then
 			repeat

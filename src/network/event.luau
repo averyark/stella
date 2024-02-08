@@ -11,6 +11,7 @@ local root = script.Parent.Parent
 local dependencies = root.dependencies
 
 local utility = require(script.Parent.Parent.utility)
+local encode = require(script.Parent.encode)
 local Signal = require(dependencies.Signal)
 local Janitor = require(dependencies.Janitor)
 local Promise = require(dependencies.Promise)
@@ -55,21 +56,21 @@ do
 
 		local self = standing[kind][identifier] :: typeof(setmetatable({}, event)) or setmetatable({}, event)
 
-		self.identifier = identifier
+		self.Identifier = identifier
 		self.signal = Signal.new()
-		self.limiter = limiter.new(-1, -1)
-		self.kind = kind or "Local"
+		self.Limiter = limiter.new(-1, -1)
+		self.Kind = kind or "Local"
 		self.callhandler = nil :: (<Parameter, Return>(...Parameter) -> ...Return)?
 		self.maid = Janitor.new()
 
 		main.makeEvent(self)
 		self.maid:Add(self.signal)
-		self.maid:Add(self.limiter)
+		self.maid:Add(self.Limiter)
 
 		return self
 	end
 
-	function event.limit(self: event, rps: number, rpm: number)
+	function event.Limit(self: event, rpm: number, rps: number)
 		self.limiter.maxRPS = rps
 		self.limiter.maxRPM = rpm
 	end
@@ -80,14 +81,14 @@ do
 		main.removeEvent(self)
 	end
 
-	function event.on<Argument>(self: event, callback: (...Argument) -> ())
+	function event.On<Argument>(self: event, callback: (...Argument) -> ())
 		return self.signal:Connect(callback :: () -> ())
 	end
 
-	function event.emit(self: event, ...: any?)
-		if self.kind == "Local" then
+	function event.Emit(self: event, ...: any?)
+		if self.Kind == "Local" then
 			self.signal:Fire(...)
-		elseif self.kind == "Remote" or self.kind == "ReplicatedRemote" then
+		elseif self.Kind == "Remote" or self.Kind == "ReplicatedRemote" then
 			local parameters = { ... }
 			local param1 = parameters[1]
 			local packet = {}
@@ -100,48 +101,52 @@ do
 			end
 			
 			packet.params = parameters
-			packet.identifier = self.identifier
+			packet.identifier = self.Identifier
+			packet.clock = DateTime.now().UnixTimestampMillis
 
 			main.addOutgoingQueue(self, packet)
 		end
 	end
 
-	function event.emitAll(self: event, ...: any)
+	function event.EmitAll(self: event, ...: any)
 		local packet = {}
 
 		packet.eventEmitType = EventEmitType.AllPlayers()
 		packet.params = { ... }
-		packet.identifier = self.identifier
+		packet.identifier = self.Identifier
+		packet.clock = DateTime.now().UnixTimestampMillis
 
 		main.addOutgoingQueue(self, packet)
 	end
 
-	function event.emitExcept(self: event, exceptions: {Player}, ...: any)
+	function event.EmitExcept(self: event, exceptions: {Player}, ...: any)
 		local packet = {}
 
 		packet.eventEmitType = EventEmitType.ExceptSomePlayers(exceptions)
 		packet.params = { ... }
-		packet.identifier = self.identifier
+		packet.identifier = self.Identifier
+		packet.clock = DateTime.now().UnixTimestampMillis
 
 		main.addOutgoingQueue(self, packet)
 	end
 
-	function event.emitOnly(self: event, inclusion: {Player}, ...: any)
+	function event.EmitOnly(self: event, inclusion: {Player}, ...: any)
 		local packet = {}
 
 		packet.eventEmitType = EventEmitType.SomePlayers(inclusion)
 		packet.params = { ... }
-		packet.identifier = self.identifier
+		packet.identifier = self.Identifier
+		packet.clock = DateTime.now().UnixTimestampMillis
 
 		main.addOutgoingQueue(self, packet)
 	end
 
-	function event.call(self: event, ...: any?)
-		if self.kind == "Local" then
+	function event.Call(self: event, ...: any?)
+		if self.Kind == "Local" then
 			return Promise.new(function(resolve)
 				resolve({ self.callhandler() })
 			end)
-		elseif self.kind == "Remote" or self.kind == "ReplicatedRemote" then
+		elseif self.Kind == "Remote" or self.Kind == "ReplicatedRemote" then
 			--utility.assert(not isServer, "network: For security reasons, you cannot call a client")
 			if isServer then
 				return Promise.reject("network: For security reasons, you cannot call a client")
@@ -150,9 +155,10 @@ do
 			local packet = {}
 
 			packet.params = parameters
-			packet.identifier = self.identifier
+			packet.identifier = self.Identifier
 			packet.callId = main.calls
 			packet.callStatus = "QueuedOutgoing"
+			packet.clock = DateTime.now().UnixTimestampMillis
 
 			main.calls += 1
 
@@ -166,7 +172,7 @@ do
 		return Promise.reject("network: Invalid remote kind for call")
 	end
 
-	function event.onCall<Parameter, Return>(self: event, callback: (...Parameter) -> ...Return)
+	function event.OnCall<Parameter, Return>(self: event, callback: (...Parameter) -> ...Return)
 		self.callHandler = callback
 	end
 

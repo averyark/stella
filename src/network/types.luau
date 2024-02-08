@@ -28,29 +28,35 @@ export type packet = {
 	callReject: (...any) -> ()?,
 	callStatus: CallStatus?,
 	callError: string?,
+	clock: number
 }
 export type event = {
-	identifier: string,
-	kind: EventType,
-	limiter: limiter,
+	Identifier: string,
+	Kind: EventType,
+	Limiter: limiter,
 
-	emit: (event, ...any) -> (),
-	emitAll: (event, ...any) -> (),
-	emitExcept: (event, exceptions: {Player}, ...any) -> (),
-	emitOnly: (event, inclusion: {Player}, ...any) -> (),
+	Limit: (number, number) -> (),
+	Emit: (event, ...any) -> (),
+	EmitAll: (event, ...any) -> (),
+	EmitExcept: (event, exceptions: {Player}, ...any) -> (),
+	EmitOnly: (event, inclusion: {Player}, ...any) -> (),
 
-	on: <Arguments>(event, callback: (...Arguments) -> ()) -> connection,
-	call: (event, ...any) -> promise,
-	onCall: <Parameter, Return>(self: event, callback: (...Parameter) -> ...Return) -> (),
+	On: <Arguments>(event, callback: (...Arguments) -> ()) -> connection,
+	Call: (event, ...any) -> promise,
+	OnCall: <Parameter, Return>(self: event, callback: (...Parameter) -> ...Return) -> (),
 }
 export type value = {
-	identifier: string,
-	limiter: limiter,
-	value: any,
+	Identifier: string,
+	Limiter: limiter,
+	Value: any,
+	OldValue: any,
+	InitialCall: boolean,
+	OnValueChanged: signal,
 
-	observe: <Value>(value, callback: (newValue: Value, oldValue: Value) -> ()) -> (),
-	set: <Value>(value, Value) -> (),
-	get: <Value>(value) -> Value,
+	Listen: <Value>(value, callback: (newValue: Value, oldValue: Value) -> ()) -> (),
+	Set: <Value>(value, Value) -> (),
+	Get: <Value>(value) -> Value,
+	Limit: (number, number) -> (),
 }
 export type limiter = {
 	maxRPS: number,

@@ -25,7 +25,7 @@ type iris = typeof(iris)
 local widgets = {}
 
 local function sort(a, b)
-	return a.priority > b.priority
+	return a.priority < b.priority
 end
 
 function debugger.Append(callback: (iris: iris) -> (), priority: number?)

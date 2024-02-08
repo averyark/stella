@@ -16,7 +16,7 @@ local random = Random.new()
 ]]
 local function shuffle<T>(array: { T }, seed: number?): { T }
 	local generator = if seed then Random.new(seed) else random
-	local arraySize = #random
+	local arraySize = #array
 	local shuffledArray = table.clone(array)
 
 	for i = 1, arraySize do

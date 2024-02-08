@@ -12,6 +12,7 @@ local RunService = game:GetService("RunService")
 local root = script.Parent.Parent
 local dependencies = root.dependencies
 
+local encode = require(script.Parent.encode)
 local debugger = require(ReplicatedStorage.Packages.stella.kit.debugger)
 local clock = require(root.kit.clock)
 local limiter = require(script.Parent.limiter)
@@ -33,6 +34,12 @@ local callQueue = {}
 local localQueue = {}
 local eventCache = {} :: { types.event }
 local playerLimiters = {} :: { types.limiter }
+local paused = false
+local snapchot = {}
+
+local MAX_LOG_DISPLAY_PACKET = 200
+
+local log = {}
 
 local function createChannel(name)
 	local channel = Instance.new("RemoteEvent")
@@ -40,6 +47,8 @@ local function createChannel(name)
 	channel.Parent = ReplicatedStorage
 	return channel
 end
+
+local typeStringTransform = utility.typeStringTransform
 
 local channel: RemoteEvent = ReplicatedStorage:FindFirstChild("__stellaNetworking")
 	or createChannel("__stellaNetworking")
@@ -102,19 +111,25 @@ end
 local function removeFromQueue(queue: { [number]: types.packet }, packet: types.packet, message: string?)
 	local index = table.find(queue, packet)
 	if index then
-		if utility.settings.DEBUG_ENABLED and utility.settings.NETWORK_DEBUG_ENABLED then
-			utility.print("network: removed from queue: " .. (message or "not provied") .. debug.traceback("\n\n", 2))
-		end
 		table.remove(queue, index)
+		if utility.settings.DEBUG_ENABLED then
+			if #log > MAX_LOG_DISPLAY_PACKET then
+				table.remove(log, 1)
+			end
+			table.insert(log, `{DateTime.fromUnixTimestampMillis(packet.clock):FormatLocalTime("HH:mm:ss:SSS", "en-us")} - {packet.identifier}: {typeStringTransform(packet.params, true)}\n queueStatus:{message or "not provided"}`)
+			if utility.settings.NETWORK_DEBUG_ENABLED then
+				utility.print("network: removed from queue: " .. (message or "not provied") .. debug.traceback("\n\n", 2))
+			end
+		end
 	end
 end
 
 local function validate(self: types.event, packet: types.packet)
-	if not self.limiter:check() then
+	if not self.Limiter:check() then
 		return false, "Gateway throttling: Event ratelimit"
 	end
 
-	self.limiter:increment()
+	self.Limiter:increment()
 
 	if packet.originPlayer then
 		local playerLimiter = playerLimiters[packet.originPlayer]
@@ -153,21 +168,21 @@ stringValue.Value = ""
 stringValue.Name = "emptyEventIdentifier"
 
 local function makeEvent(self: types.event)
-	eventCache[self.identifier] = self
+	eventCache[self.Identifier] = self
 
-	if not channel:FindFirstChild(self.identifier) and self.kind == "Remote" then
+	if not channel:FindFirstChild(self.Identifier) and self.Kind == "Remote" then
 		local identifierSV = stringValue:Clone()
-		identifierSV.Name = self.identifier
+		identifierSV.Name = self.Identifier
 		identifierSV.Parent = channel
 	end
 end
 
 local function removeEvent(self: types.event)
-	local identifierSV = channel:FindFirstChild(self.identifier)
+	local identifierSV = channel:FindFirstChild(self.Identifier)
 	if identifierSV then
 		identifierSV:Destroy()
 	end
-	eventCache[self.identifier] = nil
+	eventCache[self.Identifier] = nil
 end
 
 network.events = eventCache
@@ -337,177 +352,181 @@ local function start()
 
 		debugger.Append(function() 
 			iris.CollapsingHeader({ "Network analysis" })
-				local searchInput = iris.InputText({ "", "Search" })
-				--searchInput.text.value
+				iris.SameLine().Instance.LayoutOrder = -MAX_LOG_DISPLAY_PACKET-9999
+					if iris.Button(paused and "Unpause" or "Pause").clicked() then
+						paused = not paused
+						snapchot = table.clone(log)
+					end
+					if iris.Button("Clear").clicked() then
+						paused = false
+						table.clear(snapchot)
+						table.clear(log)
+					end
+				iris.End()
+				for i, v in (paused and snapchot or log) :: {any} do
+					iris.Text(v, {[iris.Args.Text.Wrapped] = true}).Instance.LayoutOrder = -i
+				end
 			iris.End()
-		end)
+		end, 3)
 	end
 
 	clock.new(1 / 60, function()
-		debug.profilebegin("__stellaNetwork_Processing")
+		--debug.profilebegin("__stellaNetwork_Processing")
+		-- Processing requests from the client
+		if isServer then
+			for _, packet in pairs(table.clone(incomingQueue)) do
+				local event = eventCache[packet.identifier]
 
-		do
-			debug.profilebegin("__stellaNetwork_incomingQueueProcessing")
-			-- Processing requests from the client
-			if isServer then
-				for _, packet in pairs(table.clone(incomingQueue)) do
-					local event = eventCache[packet.identifier]
-
-					if not event then
-						removeFromQueue(incomingQueue, packet, "Packet has an unknown receiving end")
-						continue
-					end
-
-					eventCache[packet.identifier].signal:Fire(packet.originPlayer, unpack(packet.params))
-
-					removeFromQueue(incomingQueue, packet, "Packet is processed")
+				if not event then
+					removeFromQueue(incomingQueue, packet, "Packet has an unknown receiving end")
+					continue
 				end
-			else
-				for _, packet in pairs(table.clone(incomingQueue)) do
-					local event = eventCache[packet.identifier]
 
-					if not event then
-						removeFromQueue(incomingQueue, packet, "Packet has an unknown receiving end")
-						continue
-					end
+				eventCache[packet.identifier].signal:Fire(packet.originPlayer, unpack(packet.params))
 
-					eventCache[packet.identifier].signal:Fire(unpack(packet.params))
-
-					removeFromQueue(incomingQueue, packet, "Packet is processed")
-				end
+				removeFromQueue(incomingQueue, packet, "Packet is processed")
 			end
-			debug.profileend()
+		else
+			for _, packet in pairs(table.clone(incomingQueue)) do
+				local event = eventCache[packet.identifier]
+
+				if not event then
+					removeFromQueue(incomingQueue, packet, "Packet has an unknown receiving end")
+					continue
+				end
+
+				eventCache[packet.identifier].signal:Fire(unpack(packet.params))
+
+				removeFromQueue(incomingQueue, packet, "Packet is processed")
+			end
 		end
-
-		do
-			debug.profilebegin("__stellaNetwork_outgoingQueueProcessing")
-
-			-- Processing requests from the client
-			if isServer then
-				for _, packet in pairs(table.clone(outgoingQueue)) do
-					if not packet.eventEmitType then
-						removeFromQueue(outgoingQueue, packet, "Packet does not have a EventEmitType")
-						continue
-					end
-					if packet.eventEmitType.kind == "Server" then
-						removeFromQueue(outgoingQueue, packet, "Packet is NOT expected to have a Server EventEmitType")
-						continue
-					end
-
-					local event = eventCache[packet.identifier]
-
-					if not event then
-						removeFromQueue(outgoingQueue, packet, "Packet has an unknown receiving end")
-						continue
-					end
-
-					--[[if packet.eventEmitType.kind == "AllPlayers" then
-						channel:FireAllClients(packet)
-					elseif packet.eventEmitType.kind == "Player" then
-						if packet.eventEmitType.value and #packet.eventEmitType.value > 0 then
-							channel:FireClient(packet.eventEmitType.value[1])
-						end
-					elseif
-						packet.eventEmitType.kind == "ExceptSomePlayers"
-						or packet.eventEmitType.kind == "SomePlayers"
-					then
-						for _, player in pairs(packet.eventEmitType.value) do
-							channel:FireClient(player, packet)
-						end
-					end
-
-					removeFromQueue(outgoingQueue, packet, "Packet is processed")]]
+	
+		-- Processing requests from the client
+		if isServer then
+			for _, packet in pairs(table.clone(outgoingQueue)) do
+				if not packet.eventEmitType then
+					removeFromQueue(outgoingQueue, packet, "Packet does not have a EventEmitType")
+					continue
+				end
+				if packet.eventEmitType.kind == "Server" then
+					removeFromQueue(outgoingQueue, packet, "Packet is NOT expected to have a Server EventEmitType")
+					continue
 				end
 
-				-- Send queue over to clients
+				local event = eventCache[packet.identifier]
 
-				local playerReceivePackets = {}
-
-				for player in pairs(playerLimiters) do
-					playerReceivePackets[player] = {}
+				if not event then
+					removeFromQueue(outgoingQueue, packet, "Packet has an unknown receiving end")
+					continue
 				end
-				for _, packet in pairs(table.clone(callQueue)) do
-					if packet.callStatus ~= "QueuedOutgoingProcessed" then
-						continue
+
+				--[[if packet.eventEmitType.kind == "AllPlayers" then
+					channel:FireAllClients(packet)
+				elseif packet.eventEmitType.kind == "Player" then
+					if packet.eventEmitType.value and #packet.eventEmitType.value > 0 then
+						channel:FireClient(packet.eventEmitType.value[1])
 					end
-					if not packet.originPlayer then
-						removeFromQueue(callQueue, packet, "Packet is missing originPlayer")
+				elseif
+					packet.eventEmitType.kind == "ExceptSomePlayers"
+					or packet.eventEmitType.kind == "SomePlayers"
+				then
+					for _, player in pairs(packet.eventEmitType.value) do
+						channel:FireClient(player, packet)
 					end
-					local playerPackets = playerReceivePackets[packet.originPlayer]
+				end
+
+				removeFromQueue(outgoingQueue, packet, "Packet is processed")]]
+			end
+
+			-- Send queue over to clients
+
+			local playerReceivePackets = {}
+
+			for player in pairs(playerLimiters) do
+				playerReceivePackets[player] = {}
+			end
+			for _, packet in pairs(table.clone(callQueue)) do
+				if packet.callStatus ~= "QueuedOutgoingProcessed" then
+					continue
+				end
+				if not packet.originPlayer then
+					removeFromQueue(callQueue, packet, "Packet is missing originPlayer")
+				end
+				local playerPackets = playerReceivePackets[packet.originPlayer]
+				if not playerPackets then
+					continue
+				end
+				packet.callStatus = "QueuedIncomingProcessed"
+				packet.eventEmitType = nil -- reduce bytes sent over the remote
+				packet.originPlayer = nil
+				packet.identifier = nil
+				packet.params = nil
+				table.insert(playerPackets, packet)
+			end
+			for _, packet in pairs(outgoingQueue) do
+				for _, player in pairs(packet.eventEmitType.value) do
+					local playerPackets = playerReceivePackets[player]
 					if not playerPackets then
 						continue
 					end
-					packet.callStatus = "QueuedIncomingProcessed"
 					packet.eventEmitType = nil -- reduce bytes sent over the remote
-					packet.originPlayer = nil
-					packet.identifier = nil
-					packet.params = nil
 					table.insert(playerPackets, packet)
 				end
-				for _, packet in pairs(outgoingQueue) do
-					for _, player in pairs(packet.eventEmitType.value) do
-						local playerPackets = playerReceivePackets[player]
-						if not playerPackets then
-							continue
-						end
-						packet.eventEmitType = nil -- reduce bytes sent over the remote
-						table.insert(playerPackets, packet)
-					end
-				end
-				--print(outgoingQueue, playerReceivePackets[Players:FindFirstChild("averyark")])
-				for player, packets in pairs(playerReceivePackets) do
-					if #packets < 1 then
-						continue
-					end
-					channel:FireClient(player, packets)
-				end
-				table.clear(outgoingQueue)
-			else
-				local packets = {}
-
-				for _, packet in pairs(table.clone(outgoingQueue)) do
-					if packet.eventEmitType.kind == "Local" then
-						removeFromQueue(outgoingQueue, packet, "Packet is expected to NOT have Local EventEmitType")
-						continue
-					end
-					if packet.eventEmitType.kind ~= "Server" then
-						removeFromQueue(
-							outgoingQueue,
-							packet,
-							`Packet is NOT expected to have a {packet.eventEmitType.kind} EventEmitType`
-						)
-						continue
-					end
-
-					local event = eventCache[packet.identifier]
-
-					if not event then
-						removeFromQueue(outgoingQueue, packet, "Packet has an unknown receiving end")
-						continue
-					end
-
-					packet.eventEmitType = nil -- reduce bytes sent over the remote
-					table.insert(packets, packet)
-					removeFromQueue(outgoingQueue, packet, "Packet is processed")
-				end
-
-				for _, packet in pairs(table.clone(callQueue)) do
-					if packet.callStatus ~= "QueuedOutgoing" then
-						continue
-					end
-					packet.callStatus = "WaitingCallReturn"
-					table.insert(packets, packet)
-					removeFromQueue(outgoingQueue, packet, "Packet is processed")
-				end
-				if #packets > 0 then
-					if utility.settings.DEBUG_ENABLED and utility.settings.NETWORK_DEBUG_ENABLED then
-						table.insert(network.log, { now = DateTime.now(), packets = packets })
-					end
-					channel:FireServer(packets)
-				end
 			end
-			debug.profileend()
+			--print(outgoingQueue, playerReceivePackets[Players:FindFirstChild("averyark")])
+			for player, packets in pairs(playerReceivePackets) do
+				if #packets < 1 then
+					continue
+				end
+				channel:FireClient(player, packets)
+			end
+			table.clear(outgoingQueue)
+		else
+			local packets = {}
+
+			for _, packet in pairs(table.clone(outgoingQueue)) do
+				if packet.eventEmitType.kind == "Local" then
+					removeFromQueue(outgoingQueue, packet, "Packet is expected to NOT have Local EventEmitType")
+					continue
+				end
+				if packet.eventEmitType.kind ~= "Server" then
+					removeFromQueue(
+						outgoingQueue,
+						packet,
+						`Packet is NOT expected to have a {packet.eventEmitType.kind} EventEmitType`
+					)
+					continue
+				end
+
+				local event = eventCache[packet.identifier]
+
+				if not event then
+					removeFromQueue(outgoingQueue, packet, "Packet has an unknown receiving end")
+					continue
+				end
+
+				packet.eventEmitType = nil -- reduce bytes sent over the remote
+				table.insert(packets, packet)
+				removeFromQueue(outgoingQueue, packet, "Packet is processed")
+			end
+
+			for _, packet in pairs(table.clone(callQueue)) do
+				if packet.callStatus ~= "QueuedOutgoing" then
+					continue
+				end
+				packet.callStatus = "WaitingCallReturn"
+				table.insert(packets, packet)
+				removeFromQueue(outgoingQueue, packet, "Packet is processed")
+			end
+			if #packets > 0 then
+				if utility.settings.DEBUG_ENABLED and utility.settings.NETWORK_DEBUG_ENABLED then
+					table.insert(network.log, { now = DateTime.now(), packets = packets })
+				end
+				channel:FireServer(packets)
+			end
 		end
+		--debug.profileend()
+		
 	end)
 end
 

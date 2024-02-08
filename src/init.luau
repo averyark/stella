@@ -33,7 +33,8 @@ local stella = {}
 
 local stellaStartupPromise = nil :: typeof(Promise.new(function() end))?
 
-local function typeStringTransform(value: any)
+local function typeStringTransform(value: any, sameLine: boolean?)
+	local newLine = not sameLine and "" or "\n"
 	local valueType = typeof(value)
 
 	local function numberTransformation(number)
@@ -56,7 +57,7 @@ local function typeStringTransform(value: any)
 				return "[REC_T_REF_2]"
 			end
 			if typeof(v) == "table" then
-				str = `{str}{nocomma and "" or ","}\n{("    "):rep(i or 0)}[{typeStringTransform(k)}] = {tableTranslate(
+				str = `{str}{nocomma and "" or ","}{newLine}{("    "):rep(i or 0)}[{typeStringTransform(k)}] = {tableTranslate(
 					k,
 					v,
 					i,
@@ -67,8 +68,8 @@ local function typeStringTransform(value: any)
 				nocomma = false
 			else
 				str = if not str
-					then "{\n" .. `{("    "):rep(i or 0)}[{typeStringTransform(k)}] = {typeStringTransform(v)}`
-					else `{str}{nocomma and "" or ","}\n{("    "):rep(i or 0)}[{typeStringTransform(k)}] = {typeStringTransform(
+					then "{" .. newLine .. `{("    "):rep(i or 0)}[{typeStringTransform(k)}] = {typeStringTransform(v)}`
+					else `{str}{nocomma and "" or ","}{newLine}{("    "):rep(i or 0)}[{typeStringTransform(k)}] = {typeStringTransform(
 						v
 					)}`
 				nocomma = false
@@ -77,7 +78,7 @@ local function typeStringTransform(value: any)
 		if not str then
 			str = "{}"
 		else
-			str = str .. `\n{("    "):rep(i - 1 or 0)}}`
+			str = str .. `{newLine}{("    "):rep(i - 1 or 0)}}`
 		end
 		task.wait()
 		return str
@@ -383,7 +384,7 @@ local function start()
 					serverModuleLog = network.value("serverModuleLog", {}),
 				}
 
-				values.serverModuleLog:observe(function(old, new)
+				values.serverModuleLog:Listen(function(old, new)
 					serverBench = new
 				end)
 			end
@@ -406,7 +407,7 @@ local function start()
 			serverModulesLoadedTag.Name = "serverModulesLoaded"
 			serverModulesLoadedTag.Parent = ROOT_CONFIG
 
-			values.serverModuleLog:set(module.info)
+			values.serverModuleLog:Set(module.info)
 		end
 
 		resolve()

@@ -44,59 +44,59 @@ end
 
 do
 	class.__index = class
-	function class.get(self: value)
-		return self.value
+	function class.Get(self: value)
+		return self.Value
 	end
-	function class.observe<Parameter>(self: value, callback: (...Parameter) -> ())
-		if self.initialCall then
-			Promise.try(callback, self.oldValue, self.value)
+	function class.Listen<Parameter>(self: value, callback: (...Parameter) -> ())
+		if self.InitialCall then
+			Promise.try(callback, self.OldValue, self.Value)
 		end
-		return self.valueChanged:Connect(callback)
+		return self.OnValueChanged:Connect(callback)
 	end
-	function class.set(self: value, value: any)
+	function class.Set(self: value, value: any)
 		utility.assert(not isClient, "network: value can only be set from the server")
 
 		if typeof(self.value) == "table" then
-			self.oldValue = deepCopy(self.value, {})
+			self.OldValue = deepCopy(self.Value, {})
 		else
-			self.oldValue = self.value
+			self.OldValue = self.Value
 		end
 
-		self.value = value
-		self:emitAll(value, self.oldValue)
+		self.Value = value
+		self:EmitAll(value, self.OldValue)
 	end
 	function class.new(identifier: string, initialValue: any, inheritance: rawEventType)
 		--local
 		local self = setmetatable(class, { __index = inheritance })
 
-		self.oldValue = nil
-		self.value = initialValue
-		self.valueChanged = Signal.new()
-		self.initialCall = false
+		self.OldValue = nil
+		self.Value = initialValue
+		self.OnValueChanged = Signal.new()
+		self.InitialCall = false
 
 		if isClient then
-			self:call():andThen(function(newValue)
-				if typeof(self.value) == "table" then
-					self.oldValue = deepCopy(self.value, {})
+			self:Call():andThen(function(newValue)
+				if typeof(self.Value) == "table" then
+					self.OldValue = deepCopy(self.Value, {})
 				else
-					self.oldValue = self.value
+					self.OldValue = self.Value
 				end
-				self.value = newValue
-				self.valueChanged:Fire(self.oldValue, newValue)
-				self.initialCall = true
+				self.Value = newValue
+				self.OnValueChanged:Fire(self.OldValue, newValue)
+				self.InitialCall = true
 			end)
-			self.maid:Add(self:on(function(newValue)
-				if typeof(self.value) == "table" then
-					self.oldValue = deepCopy(self.value, {})
+			self.maid:Add(self:On(function(newValue)
+				if typeof(self.Value) == "table" then
+					self.OldValue = deepCopy(self.Value, {})
 				else
-					self.oldValue = self.value
+					self.OldValue = self.Value
 				end
-				self.value = newValue
-				self.valueChanged:Fire(self.oldValue, newValue)
+				self.Value = newValue
+				self.OnValueChanged:Fire(self.OldValue, newValue)
 			end))
 		else
-			inheritance:onCall(function(player: Player)
-				return self.value, self.oldValue
+			inheritance:OnCall(function(player: Player)
+				return self.Value, self.oldValue
 			end)
 		end
 
