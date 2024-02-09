@@ -44,6 +44,7 @@ local remotes = {
 
 local client = {}
 local data
+local dataString
 local log = {}
 local MAX_LOG_DISPLAY_CHANGE = 200
 local paused = false
@@ -56,8 +57,6 @@ local connectedSignals = {} :: { signal }
 local changed = function(changes)
 	local snapchot = deepCopy(data)
 	local _changes = {}
-
-	print(changes)
 
 	for _, change in pairs(changes) do
 		local pathUpper1 = #change.path == 1 and {} or helper.table.cut(change.path, 1, #change.path - 1)
@@ -82,6 +81,7 @@ local changed = function(changes)
 			table.remove(log, 1)
 		end
 		table.insert(log, `{DateTime.now():FormatLocalTime("HH:mm:ss:SSS", "en-us")} - {utility.typeStringTransform(_changes)}`)
+		dataString = utility.typeStringTransform(data)
 	end
 end
 
@@ -94,6 +94,8 @@ local initialize = function(_data)
 	end
 
 	data = _data
+
+	dataString = utility.typeStringTransform(data)
 
 	for pathTable, connectedSignal in pairs(connectedSignals) do
 		connectedSignal:Fire(nil, fromPath(data, pathTable))
@@ -131,6 +133,22 @@ client.start = function()
 
 	debugger.Append(function() 
 		iris.CollapsingHeader({ "ProfileData analysis" })
+			iris.Tree("Data packets")
+				iris.SameLine().Instance.LayoutOrder = -MAX_LOG_DISPLAY_CHANGE-9999
+				if iris.Button(paused and "Unpause" or "Pause").clicked() then
+					paused = not paused
+					snapchot = table.clone(log)
+				end
+				if iris.Button("Clear").clicked() then
+					paused = false
+					table.clear(snapchot)
+					table.clear(log)
+				end
+				iris.End()
+				for i, v in (paused and snapchot or log) :: {any} do
+					iris.Text(v, {[iris.Args.Text.Wrapped] = true}).Instance.LayoutOrder = -i
+				end
+			iris.End()
 			iris.Table(2)
 				iris.NextColumn()
 				iris.Text("Key")
@@ -144,28 +162,7 @@ client.start = function()
 			iris.Text({`Datastore Status: {isDatastoreOnline and "<font color=\"#00ff00\">Online" or "<font color=\"#ff0000\">Offline"}</font>`, [iris.Args.Text.RichText] = true})
 			iris.Text({`Datastore Error: {datastoreError == nil and "None" or "<font color=\"#ff0000\">" .. tostring(datastoreError) .. "</font>"}`, [iris.Args.Text.RichText] = true})
 			iris.SeparatorText(`ProfileData Viewer`)
-			iris.Table(1)
-				iris.NextColumn()
-				iris.Text(`{Players.LocalPlayer.Name}'s ProfileData`)
-				iris.NextColumn()
-				iris.Text({utility.typeStringTransform(data) .. ""} )
-			iris.End()
-			iris.Tree(`Client profile cache updates`)
-			iris.SameLine().Instance.LayoutOrder = -MAX_LOG_DISPLAY_CHANGE-9999
-				if iris.Button(paused and "Unpause" or "Pause").clicked() then
-					paused = not paused
-						snapchot = table.clone(log)
-					end
-					if iris.Button("Clear").clicked() then
-						paused = false
-						table.clear(snapchot)
-						table.clear(log)
-					end
-				iris.End()
-				for i, v in (paused and snapchot or log) :: {any} do
-					iris.Text(v, {[iris.Args.Text.Wrapped] = true}).Instance.LayoutOrder = -i
-				end
-			iris.End()
+			iris.Text(dataString)
 		iris.End()
 	end, 4)
 end

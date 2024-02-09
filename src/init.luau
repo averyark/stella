@@ -108,23 +108,6 @@ local function start()
 
 	stellaStartupPromise = Promise.new(function(resolve, reject)
 		if RunService:IsClient() then
-			--[[iris.Init()
-
-            iris:Connect(function() 
-                local windowSize = iris.State(Vector2.new(350, 300))
-        
-                iris.Window({"Stella Framework Runtime Info"}, {size = windowSize})
-        
-                    local rollingDT = iris.State(0)
-                    local lastT = iris.State(os.clock())
-        
-                    local t = os.clock()
-                    local dt = t - lastT.value
-                    rollingDT.value += (dt - rollingDT.value) * 0.2
-                    lastT.value = t
-                    iris.Text({string.format("Average %.3f ms/frame (%.1f FPS)", rollingDT.value*1000, 1/rollingDT.value)})
-                iris.End()
-            end)]]
 			repeat
 				task.wait()
 			until ROOT_CONFIG:FindFirstChild("coreModulesLoaded")

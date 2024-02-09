@@ -24,6 +24,8 @@ end
 ]]
 local root = script.Parent.Parent
 local dependencies = root.dependencies
+local iris = require(dependencies.iris)
+local debugger = require(script.Parent.debugger)
 local Signal = require(dependencies.Signal)
 local utility = require(root.utility)
 local gui = Players.LocalPlayer:WaitForChild("PlayerGui") :: typeof(StarterGui) & PlayerGui
@@ -125,6 +127,10 @@ local function GetScaleFromResolution(resolution: Vector2)
 	return utility.settings.UI_SCALE_MODES[index]
 end
 
+local function GetPostScaleOffset(offset: Vector2)
+	return offset * scale
+end
+
 --[[
     Code
 ]]
@@ -143,6 +149,51 @@ function uiAutoScale.start()
 			UpdateScale(utility.settings.UI_SCALE_MODES[new])
 		end
 	end)
+
+	debugger.Append(function() 
+		iris.CollapsingHeader("User Interface analysis")
+			iris.SeparatorText("Scale mode resolution range")
+			iris.Table(3)
+				iris.NextColumn()
+				iris.Text("ScaleMode")
+				iris.NextColumn()
+				iris.Text("Resolution")
+				iris.NextColumn()
+				iris.Text("ScaleValue")
+				for i, resolution in utility.settings.UI_SCALE_THRESHOLD do
+					iris.NextColumn()
+					iris.Text(i)
+					iris.NextColumn()
+					iris.Text(`min(x={resolution.X}, y={resolution.Y})`)
+					iris.NextColumn()
+					iris.Text(`x{utility.settings.UI_SCALE_MODES[i]}`)
+				end
+			iris.End()
+			iris.Table(2)
+				iris.NextColumn()
+				iris.Text("Key")
+				iris.NextColumn()
+				iris.Text("Value")
+				iris.NextColumn()
+				iris.Text(`Scale Mode`)
+				iris.NextColumn()
+				iris.Text(uiAutoScale_RAW.ScaleMode)
+				iris.NextColumn()
+				iris.Text(`AutoScale Value`)
+				iris.NextColumn()
+				iris.Text(uiAutoScale_RAW.AutoScaleValue)
+				iris.NextColumn()
+				iris.Text(`Scale`)
+				iris.NextColumn()
+				iris.Text(uiAutoScale_RAW.Scale)
+				iris.NextColumn()
+				iris.Text(`Viewport Resolution`)
+				iris.NextColumn()
+				local size = workspace.CurrentCamera.ViewportSize
+				iris.Text(`x={size.X}, y={size.y}`)
+			iris.End()
+		iris.End()
+	end, 5)
 
 	-- All GuiObject under the PlayerGui with the {AutoScaleTag} collection tag is picked up and auto scaled
 	-- Default collection tag is "AutoScale"

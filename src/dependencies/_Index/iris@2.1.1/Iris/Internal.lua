@@ -61,9 +61,9 @@ return function(Iris: Types.Iris): Types.Internal
     Internal._cycleCoroutine = coroutine.create(function()
         while true do
             for _, callback: () -> string in Internal._connectedFunctions do
-                debug.profilebegin("Iris/Connection")
+                --debug.profilebegin("Iris/Connection")
                 local status: boolean, _error: string = pcall(callback)
-                debug.profileend()
+                --debug.profileend()
                 if not status then
                     -- any error reserts the _stackIndex for the next frame and yeilds the error.
                     Internal._stackIndex = 1
@@ -687,7 +687,7 @@ return function(Iris: Types.Iris): Types.Internal
         local UIStroke: UIStroke = Instance.new("UIStroke")
         UIStroke.Thickness = 1
         UIStroke.Color = Internal._config.SelectionImageObjectBorderColor
-        UIStroke.Transparency = Internal._config.SelectionImageObjectBorderColor
+        UIStroke.Transparency = Internal._config.SelectionImageObjectBorderTransparency
         UIStroke.LineJoinMode = Enum.LineJoinMode.Round
         UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
