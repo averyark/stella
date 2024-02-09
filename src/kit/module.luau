@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 --[[
     FileName    > module.luau
     Author      > AveryArk
@@ -31,6 +31,7 @@ module.setModuleFolder = function(container: Instance)
 	local promises = {}
 	for _, module in pairs(container:GetDescendants()) do
 		if module:IsA("ModuleScript") then
+			local modulepath: any = module :: any
 			table.insert(
 				promises,
 				Promise.new(function(resolve)

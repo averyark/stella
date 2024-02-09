@@ -1,6 +1,6 @@
 [package]
 name = "averyark/stella"
-version = "2.2.1"
+version = "2.2.2"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 authors = ["averyark"]
