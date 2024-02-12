@@ -87,7 +87,7 @@ local TYPE = function()
 	return public
 end
 
-server.WaitForDataStore = function()
+server.Wait = function()
 	if isDatastoreActive then
 		return
 	end
@@ -106,7 +106,7 @@ server.start = function()
 	end)
 
 	remotes.updateData:On(function(player, ...)
-		server.WaitForDataStore()
+		server.Wait()
 
 		local data = loadPlayerData(player, datastore)
 

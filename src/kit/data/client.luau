@@ -183,7 +183,7 @@ client.Wait = function()
 	until data
 end
 
-client.Get = function()
+client.GetClientCache = function()
 	return data :: typeof(utility.settings.DATA_TEMPLATE)
 end
 

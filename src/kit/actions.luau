@@ -16,8 +16,8 @@ local UserInputService = game:GetService("UserInputService")
 local root = script.Parent.Parent
 local dependencies = root.dependencies
 
-local Janitor = require(ReplicatedStorage.Packages.stella.dependencies.Janitor)
-local utility = require(ReplicatedStorage.Packages.stella.utility)
+local Janitor = require(dependencies.Janitor)
+local utility = require(root.utility)
 local t = require(dependencies.t)
 local Signal = require(dependencies.Signal)
 

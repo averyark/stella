@@ -13,7 +13,7 @@ local root = script.Parent.Parent
 local dependencies = root.dependencies
 
 local actions = require(script.Parent.actions)
-local utility = require(ReplicatedStorage.Packages.stella.utility)
+local utility = require(root.utility)
 local iris = require(dependencies.iris)
 local t = require(dependencies.t)
 local Signal = require(dependencies.Signal)
